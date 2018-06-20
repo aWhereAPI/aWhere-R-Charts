@@ -18,14 +18,14 @@ This package can be installed directly from GitHub with the following command:
 
 ### Manually Install
 
-1. Download this Github repo and keep the `aWhere-R-Charts` folder somewhere useful on your computer, such as your Desktop or My Documents.
+1. Download this Github repo and keep the `aWhere-R-Charts-master` folder somewhere useful on your computer, such as your Desktop or My Documents.
 
-2. Set the Working Path in R to the location that contains the `aWhere-R-Charts` folder. If you placed it on your Desktop the working directory would be something like `C:\Users\USERNAME\Desktop`. In R, this command is:
+2. Set the Working Path in R to the location that contains the `aWhere-R-Charts-master` folder. If you placed it on your Desktop the working directory would be something like `C:\Users\USERNAME\Desktop`. In R, this command is:
 	* `setwd("C:\Users\USERNAME\Desktop")`
 
 3. Run the following set of commands to install and add the library to your environment:
 	* `library(devtools)`
-	* `install("aWhere-R-Charts")`
+	* `install("aWhere-R-Charts-master")`
 	* `library(aWhereAPI)`
 
 ## Documentation
