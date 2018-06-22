@@ -24,7 +24,7 @@
 #' @param - day_end: character string in YYYY-MM-DD format,
 #'             denoting the last day for which you want weather data retrieved  (required)
 #' @param - year_start: numeric in YYYY format, denoting the first year
-#'             of data which should be included in the norms calculation (required)
+#'             of data which should be included in the norms calculation.  (required)
 #' @param - year_end: numeric in YYYY format, denoting the last year
 #'             of data which should be included in the norms calculation (required)
 #'
@@ -46,6 +46,13 @@ generateaWhereDataset <- function(lat
                                   ,year_start
                                   ,year_end) {
 
+  #Determine if only forecast data is requested
+  if (day_start >= Sys.Date()) {
+    onlyForecastRequested <- TRUE
+  } else {
+    onlyForecastRequested <- FALSE
+  }
+  
   #set month-day combos to pull LTN for. If more than one year of data is requested, then
   #Jan 1-December 31 is set. Otherwise, the span is set based on the date span of the query.
   if((as.numeric(as.Date(day_end)) - as.numeric(as.Date(day_start))) < 365) {
@@ -56,6 +63,7 @@ generateaWhereDataset <- function(lat
     monthday_end <- "12-31"
   }
 
+
   #if forecast data is requested, set an interim day_end for obs/ag queries
   if((day_end <= (Sys.Date()-1)) == TRUE) {
     interim_day_end <- day_end
@@ -64,21 +72,33 @@ generateaWhereDataset <- function(lat
   }
 
   #pull daily weather data for determined time period
-  obs <- aWhereAPI::daily_observed_latlng(lat, lon, day_start, day_end = interim_day_end) %>%
-    cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
-    mutate(day = paste0(X2, "-", X3))%>%
-    dplyr::select(-c(X1,X2,X3))
-
-  #simplify column names
-  names(obs)[grep("temperatures.max", names(obs))] <- "maxTemp"
-  names(obs)[grep("temperatures.min", names(obs))] <- "minTemp"
+  
+  if (onlyForecastRequested == FALSE) {
+    obs <- aWhereAPI::daily_observed_latlng(lat, lon, day_start, day_end = interim_day_end) %>%
+      cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
+      mutate(day = paste0(X2, "-", X3))%>%
+      dplyr::select(-c(X1,X2,X3))
+  
+    #simplify column names
+    names(obs)[grep("temperatures.max", names(obs))] <- "maxTemp"
+    names(obs)[grep("temperatures.min", names(obs))] <- "minTemp"
+  
+    
+  } else {
+    #based on the code below we need to have a data.frame with this name that
+    #has at least the columns date and day for the merge to be successful.  The
+    #merge is doing an outer join
+    obs <- data.frame(date = Sys.Date(),day = 0,maxTemp = 0, minTemp = 0, precipitation.amount = 0)
+    obs <- obs[0,]
+  }
 
   #pull agronomic data for time period
+  ##This works becayse the Ag endpoint includes forecast data
   ag <- aWhereAPI::agronomic_values_latlng(lat, lon, day_start, day_end) %>%
     cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
     mutate(day = paste0(X2, "-", X3)) %>%
     dplyr::select(-c(X1,X2,X3))
-
+  
   #pull LTN observed weather
   obs_ltn <- aWhereAPI::weather_norms_latlng(lat, lon, monthday_start, monthday_end, year_start, year_end,includeFeb29thData = FALSE)
 
