@@ -133,10 +133,10 @@ generateaWhereDataset <- function(lat
 
     #create final dataset
 
-    weather_full <- merge(obs, ag, by = c("date", 'day'), all = TRUE) %>%
-      merge(., forecast,       by = c("date", "day"), all = TRUE) %>%
-      merge(., obs_ltn,    by = "day")  %>%
-      merge(., ag_ltn,  by = "day") %>%
+    weather_full <- merge(obs, ag, by = c("date", "day", "latitude", "longitude"), all = TRUE) %>%
+      merge(., forecast, by = c("date", "day", "latitude", "longitude"), all = TRUE) %>%
+      merge(., obs_ltn, by = c("day", "latitude", "longitude"))  %>%
+      merge(., ag_ltn,  by = c("day", "latitude", "longitude")) %>%
       .[order(.$date),] %>%
       dplyr::mutate(maxTemp = ifelse(!is.na(maxTemp), maxTemp, temperatures.max),
                     minTemp = ifelse(!is.na(minTemp), minTemp, temperatures.min),
