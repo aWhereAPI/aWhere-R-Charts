@@ -109,9 +109,9 @@ generateaWhereDataset <- function(lat
   if((day_end <= (Sys.Date()-1)) == TRUE) {
 
     #create final dataset
-      weather_full <- merge(obs, ag, by = c("date", "day")) %>%
-        merge(., obs_ltn,            by = "day") %>%
-        merge(., ag_ltn,             by = "day")   %>%
+      weather_full <- merge(obs, ag, by = c("date", "day","latitude", "longitude"), all = TRUE) %>%
+        merge(., obs_ltn,            by = c("day","latitude", "longitude")) %>%
+        merge(., ag_ltn,             by = c("day","latitude", "longitude"))   %>%
         .[order(.$date),] %>%
         dplyr::mutate(accumulatedPrecipitation.average = cumsum(precipitation.average),
                       accumulatedPet.average = cumsum(pet.average),
