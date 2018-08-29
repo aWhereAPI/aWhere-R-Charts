@@ -18,7 +18,7 @@ denoting the first day for which you want weather data retrieved  (required)}
 denoting the last day for which you want weather data retrieved  (required)}
 
 \item{-}{year_start: numeric in YYYY format, denoting the first year
-of data which should be included in the norms calculation (required)}
+of data which should be included in the norms calculation.  (required)}
 
 \item{-}{year_end: numeric in YYYY format, denoting the last year
 of data which should be included in the norms calculation (required)}
