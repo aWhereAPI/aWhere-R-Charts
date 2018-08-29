@@ -1,6 +1,6 @@
 Package: aWhereCharts
 Title: Make Charts using output from aWhere API
-Version: 0.2.0
+Version: 0.3.0
 Author: c(person("Technical", "Support", ,"technicalsupport@awhere.com", role = c("aut","cre","ctb")))
 Description: R package to work with aWhere APIs and make charts
 License: MIT, Copyright 2016 aWhere
