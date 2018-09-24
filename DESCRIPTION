@@ -17,4 +17,5 @@ Imports: aWhereAPI,
       sp,
       tidyr,
       zoo
-
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
