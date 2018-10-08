@@ -34,8 +34,14 @@
 #' @return dataframe
 #'
 #' @examples
-#' \dontrun{generateaWhereDataset(lat = 30.685, lon = 72.928, day_start = "2017-01-01",
-#'                                day_end = "2017-06-01", year_start = 2008, year_end = 2017)}
+#' \dontrun{generateaWhereDataset(lat = 30.685
+#'                               ,lon = 72.928
+#'                               ,day_start = "2017-01-01"
+#'                               ,day_end = "2017-06-01"
+#'                               ,year_start = 2008
+#'                               ,year_end = 2017
+#'                               )
+#'         }
 
 #' @export
 
@@ -74,7 +80,7 @@ generateaWhereDataset <- function(lat
   #pull daily weather data for determined time period
   
   if (onlyForecastRequested == FALSE) {
-    obs <- aWhereAPI::daily_observed_latlng(lat, lon, day_start, day_end = interim_day_end) %>%
+    obs <- suppressWarnings(aWhereAPI::daily_observed_latlng(lat, lon, day_start, day_end = interim_day_end)) %>%
       cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
       mutate(day = paste0(X2, "-", X3))%>%
       dplyr::select(-c(X1,X2,X3))
@@ -82,7 +88,7 @@ generateaWhereDataset <- function(lat
     #simplify column names
     names(obs)[grep("temperatures.max", names(obs))] <- "maxTemp"
     names(obs)[grep("temperatures.min", names(obs))] <- "minTemp"
-  
+    
     
   } else {
     #based on the code below we need to have a data.frame with this name that
@@ -94,10 +100,11 @@ generateaWhereDataset <- function(lat
 
   #pull agronomic data for time period
   ##This works becayse the Ag endpoint includes forecast data
-  ag <- aWhereAPI::agronomic_values_latlng(lat, lon, day_start, day_end) %>%
+  ag <- suppressWarnings(aWhereAPI::agronomic_values_latlng(lat, lon, day_start, day_end)) %>%
     cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
     mutate(day = paste0(X2, "-", X3)) %>%
     dplyr::select(-c(X1,X2,X3))
+  
   
   #pull LTN observed weather
   obs_ltn <- aWhereAPI::weather_norms_latlng(lat, lon, monthday_start, monthday_end, year_start, year_end,includeFeb29thData = FALSE)
@@ -105,6 +112,85 @@ generateaWhereDataset <- function(lat
   #pull LTN agronomic
   ag_ltn <- aWhereAPI::agronomic_norms_latlng(lat, lon, monthday_start, monthday_end, year_start, year_end,includeFeb29thData = FALSE)
 
+  #REPLACE ANY MISSING DATA WITH LTN VALUES
+  if(all(complete.cases(obs) == TRUE) == FALSE) {
+
+    
+    
+    obs <- merge(obs
+                ,subset(obs_ltn
+                       ,select = c('latitude'
+                                  ,'longitude'
+                                  ,'day'
+                                  ,'maxTemp.average'
+                                  ,'minTemp.average'
+                                  ,'precipitation.average'
+                                  ,'solar.average'
+                                  ,'minHumidity.average'
+                                  ,'maxHumidity.average'
+                                  ,'dailyMaxWind.average'
+                                  ,'averageWind.average'
+                                  )
+                       )
+                ,by = c('latitude','longitude','day'))
+          
+    
+    obs$maxTemp[is.na(obs$maxTemp)] <- obs$maxTemp.average[is.na(obs$maxTemp)]
+    obs$minTemp[is.na(obs$minTemp)] <- obs$minTemp.average[is.na(obs$minTemp)]
+    obs$precipitation.amount[is.na(obs$precipitation.amount)] <- obs$precipitation.average[is.na(obs$precipitation.amount)]
+    obs$solar.amount[is.na(obs$solar.amount)] <- obs$solar.average[is.na(obs$solar.amount)]
+    obs$relativeHumidity.max[is.na(obs$relativeHumidity.max)] <- obs$maxHumidity.average[is.na(obs$relativeHumidity.max)]
+    obs$relativeHumidity.min[is.na(obs$relativeHumidity.min)] <- obs$minHumidity.average[is.na(obs$relativeHumidity.min)]
+    obs$wind.morningMax[is.na(obs$wind.morningMax)] <- obs$dailyMaxWind.average[is.na(obs$wind.morningMax)]
+    obs$wind.dayMax[is.na(obs$wind.dayMax)] <- obs$dailyMaxWind.average[is.na(obs$wind.dayMax)]
+    obs$wind.average[is.na(obs$wind.average)] <- obs$averageWind.average[is.na(obs$wind.average)]
+    
+    obs <- subset(obs
+                 ,select = -c(maxTemp.average
+                               ,minTemp.average
+                               ,precipitation.average
+                               ,solar.average
+                               ,minHumidity.average
+                               ,maxHumidity.average
+                               ,dailyMaxWind.average
+                               ,averageWind.average)
+                 )
+  } 
+  
+  if(all(complete.cases(ag) == TRUE) == FALSE) {
+    
+    
+    
+    ag <- merge(ag
+                 ,subset(ag_ltn
+                         ,select = c('latitude'
+                                     ,'longitude'
+                                     ,'day'
+                                     ,'gdd.average'
+                                     ,'ppet.average'
+                                     ,'pet.average'
+                                     )
+                         )
+                 ,by = c('latitude','longitude','day'))
+    
+    
+    ag$gdd[is.na(ag$gdd)]   <- ag$gdd.average[is.na(ag$gdd)]
+    ag$ppet[is.na(ag$ppet)] <- ag$ppet.average[is.na(ag$ppet)]
+    ag$pet[is.na(ag$pet.amount)]   <- ag$pet.average[is.na(ag$pet.amount)]
+
+    ag$accumulatedGdd <- cumsum(ag$gdd)
+    ag$accumulatedPpet <- cumsum(ag$ppet)
+    ag$accumulatedPet.amount <- cumsum(ag$pet.amount)
+    
+    ag <- subset(ag
+                ,select = -c(gdd.average
+                             ,ppet.average
+                             ,pet.average
+                             )
+                )
+  } 
+  
+  
 
   if((day_end <= (Sys.Date()-1)) == TRUE) {
 
