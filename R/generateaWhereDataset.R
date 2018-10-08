@@ -143,7 +143,7 @@ generateaWhereDataset <- function(lat
     obs$relativeHumidity.min[is.na(obs$relativeHumidity.min)] <- obs$minHumidity.average[is.na(obs$relativeHumidity.min)]
     obs$wind.morningMax[is.na(obs$wind.morningMax)] <- obs$dailyMaxWind.average[is.na(obs$wind.morningMax)]
     obs$wind.dayMax[is.na(obs$wind.dayMax)] <- obs$dailyMaxWind.average[is.na(obs$wind.dayMax)]
-    obs$wind.average[is.na(obs$wind.average)] <- obs$wind.average[is.na(obs$wind.average)]
+    obs$wind.average[is.na(obs$wind.average)] <- obs$averageWind.average[is.na(obs$wind.average)]
     
     obs <- subset(obs
                  ,select = -c(maxTemp.average
