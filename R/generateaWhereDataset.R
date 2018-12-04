@@ -52,11 +52,8 @@ generateaWhereDataset <- function(lat
                                   ,year_start
                                   ,year_end) {
 
-  #Determine if only forecast data is requested
-  if (day_start >= Sys.Date()) {
-    onlyForecastRequested <- TRUE
-  } else {
-    onlyForecastRequested <- FALSE
+  if (exists('awhereEnv75247') == FALSE) {
+    stop('Please load credentials for aWhereAPI before continuing')
   }
   
   #set month-day combos to pull LTN for. If more than one year of data is requested, then
@@ -70,17 +67,97 @@ generateaWhereDataset <- function(lat
   }
 
 
-  #if forecast data is requested, set an interim day_end for obs/ag queries
-  if((day_end <= (Sys.Date()-1)) == TRUE) {
-    interim_day_end <- day_end
+  #if forecast data is requested, set an interim day_end for obs/ag queries 
+  #Because of time zone differences between where the call is being made from 
+  #and for, simply using the user's current date and subtracting one is not 
+  #sufficient.  What we will do instead and is test empirically for the last
+  #date that makes a valid return from the historical API and then use that
+  #going forward.  Subsequent forecast calls will use this date + 1 as their starting point
+  
+  if((day_start >= (Sys.Date()+2)) == TRUE) {
+    onlyForecastRequested <- TRUE
   } else {
-    interim_day_end <- as.character((Sys.Date()-1))
+    dateToTest <- Sys.Date()  - 2 #this is one extra day of testing than should be necessary
+    
+    repeatQuery <- TRUE
+    while(repeatQuery == TRUE) {
+      repeatQuery <- FALSE
+      
+      temp <- tryCatch({
+        
+        aWhereAPI::forecasts_latlng(lat
+                                    ,lon
+                                    ,day_start = as.character(dateToTest)
+                                    ,day_end = as.character(dateToTest)
+                                    ,block_size = 24)
+        
+      }, error = function(e) {
+        repeatQuery <- TRUE
+        dateToTest <- dateToTest+1
+        return(list(repeatQuery,dateToTest))
+      })
+      #Because there is no explicit error object in the return, we will instead
+      #test if the fxn returned a data.frame indicating the query worked
+      if(is.data.frame(temp) == FALSE) {
+        repeatQuery <- temp[[1]][1]
+        dateToTest <- temp[[2]][1]
+        
+        rm(temp)
+      }
+    }
+    
+    if (dateToTest <= lubridate::ymd(day_start)) {
+      onlyForecastRequested <- TRUE
+    } else {
+      onlyForecastRequested <- FALSE
+    }
+  }
+  
+  
+  #No matter where you are on the planet, another spot can be no more than 24
+  #hours difference in time.  Therefore, if we check if the end_date used in the
+  #call is more than 2 days later than the current date, we know we need to hit
+  #the historical endpoint
+  if((day_end <= (Sys.Date()-2)) == TRUE) {
+    interim_day_end <- day_end
+    
+  } else {
+    dateToTest <- Sys.Date() + 2 #this is one extra day of testing than should be necessary
+    
+    repeatQuery <- TRUE
+    while(repeatQuery == TRUE) {
+      repeatQuery <- FALSE
+
+      temp <- tryCatch({
+                aWhereAPI::daily_observed_latlng(lat
+                                              ,lon
+                                              ,day_start = as.character(dateToTest)
+                                              ,day_end = as.character(dateToTest))
+              }, error = function(e) {
+                repeatQuery <- TRUE
+                dateToTest <- dateToTest-1
+                return(list(repeatQuery,dateToTest))
+              })
+      #Because there is no explicit error object in the return, we will instead
+      #test if the fxn returned a data.frame indicating the query worked
+      if(is.data.frame(temp) == FALSE) {
+        repeatQuery <- temp[[1]][1]
+        dateToTest <- temp[[2]][1]
+        
+        rm(temp)
+      }
+    }
+    
+    interim_day_end <- dateToTest
   }
 
+
   #pull daily weather data for determined time period
-  
   if (onlyForecastRequested == FALSE) {
-    obs <- suppressWarnings(aWhereAPI::daily_observed_latlng(lat, lon, day_start, day_end = interim_day_end)) %>%
+    obs <- suppressWarnings(aWhereAPI::daily_observed_latlng(lat
+                                                             ,lon
+                                                             ,day_start
+                                                             ,day_end = as.character(interim_day_end))) %>%
       cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
       mutate(day = paste0(X2, "-", X3))%>%
       dplyr::select(-c(X1,X2,X3))
@@ -114,8 +191,6 @@ generateaWhereDataset <- function(lat
 
   #REPLACE ANY MISSING DATA WITH LTN VALUES
   if(all(complete.cases(obs) == TRUE) == FALSE) {
-
-    
     
     obs <- merge(obs
                 ,subset(obs_ltn
@@ -158,8 +233,6 @@ generateaWhereDataset <- function(lat
   } 
   
   if(all(complete.cases(ag) == TRUE) == FALSE) {
-    
-    
     
     ag <- merge(ag
                  ,subset(ag_ltn
@@ -206,8 +279,15 @@ generateaWhereDataset <- function(lat
 
   } else {
 
-    #pull forecasted data for determined time period
-    forecast <- aWhereAPI::forecasts_latlng(lat, lon, day_end = day_end, block_size = 24) %>%
+    #pull forecasted data for determined time period We are using what is
+    #determined above to be the last valid day of historical data at this
+    #location at the time the API call is made and incrementing by one day to
+    #get the date range fo rthis call
+    forecast <- aWhereAPI::forecasts_latlng(lat
+                                            ,lon
+                                            ,day_start = as.character(interim_day_end + 1)
+                                            ,day_end = day_end
+                                            ,block_size = 24) %>%
       mutate(date = substr(.$startTime, 1, 10)) %>%
       cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
       #create month-day combo column
