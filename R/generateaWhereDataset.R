@@ -30,16 +30,17 @@
 #'
 #' @import dplyr
 #' @import aWhereAPI
+#' @import data.table
 #'
 #' @return dataframe
 #'
 #' @examples
 #' \dontrun{generateaWhereDataset(lat = 30.685
 #'                               ,lon = 72.928
-#'                               ,day_start = "2017-01-01"
-#'                               ,day_end = "2017-06-01"
+#'                               ,day_start = "2018-09-01"
+#'                               ,day_end = "2019-01-17"
 #'                               ,year_start = 2008
-#'                               ,year_end = 2017
+#'                               ,year_end = 2018
 #'                               )
 #'         }
 
@@ -160,65 +161,105 @@ generateaWhereDataset <- function(lat
                                                              ,day_end = as.character(interim_day_end))) %>%
       cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
       mutate(day = paste0(X2, "-", X3))%>%
-      dplyr::select(-c(X1,X2,X3))
+      dplyr::select(-c(X1,X2,X3)) %>%
+      data.table::as.data.table(.)
   
     #simplify column names
-    names(obs)[grep("temperatures.max", names(obs))] <- "maxTemp"
-    names(obs)[grep("temperatures.min", names(obs))] <- "minTemp"
+    data.table::setnames(obs,c('temperatures.max'
+                               ,'temperatures.min'
+                               ,'relativeHumidity.max'
+                               ,'relativeHumidity.min'
+                               ,'wind.morningMax'
+                               ,'wind.dayMax'
+                               ,'wind.average'), c('maxTemp'
+                                                   ,'minTemp'
+                                                   ,'maxRH'
+                                                   ,'minRH'
+                                                   ,'maxMorningWind'
+                                                   ,'maxWind'
+                                                   ,'averageWind'))
+    
     
     
   } else {
     #based on the code below we need to have a data.frame with this name that
     #has at least the columns date and day for the merge to be successful.  The
     #merge is doing an outer join
-    obs <- data.frame(date = Sys.Date(),day = 0,maxTemp = 0, minTemp = 0, precipitation.amount = 0)
+    obs <- data.frame(date = Sys.Date()
+                      ,day = 0
+                      ,maxTemp = 0
+                      ,minTemp = 0
+                      ,precipitation.amount = 0
+                      ,solar.amount = 0
+                      ,maxRH = 0
+                      ,minRH = 0
+                      ,maxMorningWind = 0
+                      ,maxWind = 0
+                      ,averageWind = 0)
     obs <- obs[0,]
   }
 
   #pull agronomic data for time period
   ##This works becayse the Ag endpoint includes forecast data
-  ag <- suppressWarnings(aWhereAPI::agronomic_values_latlng(lat, lon, day_start, day_end)) %>%
+  ag <- suppressWarnings(aWhereAPI::agronomic_values_latlng(latitude = lat
+                                                            ,longitude = lon
+                                                            ,day_start = day_start
+                                                            ,day_end = day_end)) %>%
     cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
     mutate(day = paste0(X2, "-", X3)) %>%
-    dplyr::select(-c(X1,X2,X3))
+    dplyr::select(-c(X1,X2,X3)) %>%
+    data.table::as.data.table(.)
   
   
   #pull LTN observed weather
-  obs_ltn <- aWhereAPI::weather_norms_latlng(lat, lon, monthday_start, monthday_end, year_start, year_end,includeFeb29thData = FALSE)
+  obs_ltn <- suppressWarnings(aWhereAPI::weather_norms_latlng(latitude = lat
+                                                              ,longitude = lon
+                                                              ,monthday_start = monthday_start
+                                                              ,monthday_end = monthday_end
+                                                              ,year_start = year_start
+                                                              ,year_end = year_end
+                                                              ,includeFeb29thData = FALSE)) %>%
+    data.table::as.data.table(.)
 
   #pull LTN agronomic
-  ag_ltn <- aWhereAPI::agronomic_norms_latlng(lat, lon, monthday_start, monthday_end, year_start, year_end,includeFeb29thData = FALSE)
+  ag_ltn <- suppressWarnings(aWhereAPI::agronomic_norms_latlng(latitude = lat
+                                                               ,longitude = lon
+                                                               ,month_day_start = monthday_start
+                                                               ,month_day_end = monthday_end
+                                                               ,year_start = year_start
+                                                               ,year_end = year_end
+                                                               ,includeFeb29thData = FALSE)) %>%
+    data.table::as.data.table(.)
 
   #REPLACE ANY MISSING DATA WITH LTN VALUES
   if(all(complete.cases(obs) == TRUE) == FALSE) {
     
     obs <- merge(obs
-                ,subset(obs_ltn
-                       ,select = c('latitude'
-                                  ,'longitude'
-                                  ,'day'
-                                  ,'maxTemp.average'
-                                  ,'minTemp.average'
-                                  ,'precipitation.average'
-                                  ,'solar.average'
-                                  ,'minHumidity.average'
-                                  ,'maxHumidity.average'
-                                  ,'dailyMaxWind.average'
-                                  ,'averageWind.average'
-                                  )
-                       )
+                ,obs_ltn[,list(latitude
+                              ,longitude
+                              ,day
+                              ,maxTemp.average
+                              ,minTemp.average
+                              ,precipitation.average
+                              ,solar.average
+                              ,minHumidity.average
+                              ,maxHumidity.average
+                              ,dailyMaxWind.average
+                              ,averageWind.average
+                              )
+                         ]
                 ,by = c('latitude','longitude','day'))
           
     
-    obs$maxTemp[is.na(obs$maxTemp)] <- obs$maxTemp.average[is.na(obs$maxTemp)]
-    obs$minTemp[is.na(obs$minTemp)] <- obs$minTemp.average[is.na(obs$minTemp)]
-    obs$precipitation.amount[is.na(obs$precipitation.amount)] <- obs$precipitation.average[is.na(obs$precipitation.amount)]
-    obs$solar.amount[is.na(obs$solar.amount)] <- obs$solar.average[is.na(obs$solar.amount)]
-    obs$relativeHumidity.max[is.na(obs$relativeHumidity.max)] <- obs$maxHumidity.average[is.na(obs$relativeHumidity.max)]
-    obs$relativeHumidity.min[is.na(obs$relativeHumidity.min)] <- obs$minHumidity.average[is.na(obs$relativeHumidity.min)]
-    obs$wind.morningMax[is.na(obs$wind.morningMax)] <- obs$dailyMaxWind.average[is.na(obs$wind.morningMax)]
-    obs$wind.dayMax[is.na(obs$wind.dayMax)] <- obs$dailyMaxWind.average[is.na(obs$wind.dayMax)]
-    obs$wind.average[is.na(obs$wind.average)] <- obs$averageWind.average[is.na(obs$wind.average)]
+    obs[is.na(maxTemp), maxTemp := maxTemp.average]
+    obs[is.na(minTemp), minTemp := minTemp.average]
+    obs[is.na(precipitation.amount), precipitation.amount := precipitation.average]
+    obs[is.na(solar.amount), solar.amount := solar.average]
+    obs[is.na(maxRH), maxRH := maxHumidity.average]
+    obs[is.na(minRH), minRH := minHumidity.average]
+    obs[is.na(maxMorningWind), maxMorningWind := dailyMaxWind.average]
+    obs[is.na(maxWind), maxWind := dailyMaxWind.average]
+    obs[is.na(averageWind), averageWind := averageWind.average]
     
     obs <- subset(obs
                  ,select = -c(maxTemp.average
@@ -235,36 +276,39 @@ generateaWhereDataset <- function(lat
   if(all(complete.cases(ag) == TRUE) == FALSE) {
     
     ag <- merge(ag
-                 ,subset(ag_ltn
-                         ,select = c('latitude'
-                                     ,'longitude'
-                                     ,'day'
-                                     ,'gdd.average'
-                                     ,'ppet.average'
-                                     ,'pet.average'
-                                     )
-                         )
+                 ,ag_ltn[, list(latitude
+                               ,longitude
+                               ,day
+                               ,gdd.average
+                               ,ppet.average
+                               ,pet.average)]
                  ,by = c('latitude','longitude','day'))
+    ag <- merge(ag
+                ,obs[,list(latitude
+                           ,longitude
+                           ,day
+                           ,precipitation.amount)])
+    
+    ag[is.na(gdd), gdd := gdd.average]
+    ag[is.na(ppet), ppet := ppet.average]
+    ag[is.na(pet.amount), pet.amount := pet.average]
+    
+    ag[,accumulatedGdd := cumsum(gdd)]
+    ag[,accumulatedPpet := cumsum(ppet)]
+    ag[,accumulatedPrecipitation.amount := cumsum(precipitation.amount)]
+    ag[,accumulatedPet.amount := cumsum(pet.amount)]
     
     
-    ag$gdd[is.na(ag$gdd)]   <- ag$gdd.average[is.na(ag$gdd)]
-    ag$ppet[is.na(ag$ppet)] <- ag$ppet.average[is.na(ag$ppet)]
-    ag$pet[is.na(ag$pet.amount)]   <- ag$pet.average[is.na(ag$pet.amount)]
-
-    ag$accumulatedGdd <- cumsum(ag$gdd)
-    ag$accumulatedPpet <- cumsum(ag$ppet)
-    ag$accumulatedPet.amount <- cumsum(ag$pet.amount)
     
     ag <- subset(ag
                 ,select = -c(gdd.average
                              ,ppet.average
                              ,pet.average
-                             )
-                )
+                             ,precipitation.amount))
   } 
   
   
-
+  #If no forecast data is needed
   if((day_end <= (Sys.Date()-1)) == TRUE) {
 
     #create final dataset
@@ -292,10 +336,14 @@ generateaWhereDataset <- function(lat
       cbind(., data.frame(do.call(rbind, strsplit(.$date, "-")))) %>%
       #create month-day combo column
       mutate(day = paste0(X2, "-", X3))%>%
-      dplyr::select(-c(X1,X2,X3))
+      dplyr::select(-c(X1,X2,X3)) %>%
+      as.data.table(.)
 
     #set precipitation name to delineate from observed
-    names(forecast)[grep("precipitation.amount", names(forecast))] <- "precipitation.forecast"
+    setnames(forecast,c('precipitation.amount'
+                        ,'solar.amount'), c('precipitation.forecast'
+                                            ,'solar.forecast'))
+    
 
     #create final dataset
 
@@ -304,28 +352,72 @@ generateaWhereDataset <- function(lat
       merge(., obs_ltn, by = c("day", "latitude", "longitude"))  %>%
       merge(., ag_ltn,  by = c("day", "latitude", "longitude")) %>%
       .[order(.$date),] %>%
-      dplyr::mutate(maxTemp = ifelse(!is.na(maxTemp), maxTemp, temperatures.max),
-                    minTemp = ifelse(!is.na(minTemp), minTemp, temperatures.min),
-                    precipitation.amount = ifelse(!is.na(precipitation.amount), precipitation.amount, precipitation.forecast),
-                    accumulatedPrecipitation.amount = cumsum(precipitation.amount),
-                    accumulatedPrecipitation.average = cumsum(precipitation.average),
-                    accumulatedPet.average = cumsum(pet.average),
-                    accumulatedPpet.average = cumsum(ppet.average))
+      dplyr::mutate(maxTemp.amount        = ifelse(!is.na(maxTemp),              maxTemp, temperatures.max)
+                    ,minTemp.amount       = ifelse(!is.na(minTemp),              minTemp, temperatures.min)
+                    ,precipitation.amount = ifelse(!is.na(precipitation.amount), precipitation.amount, precipitation.forecast)
+                    ,solar.amount         = ifelse(!is.na(solar.amount),         solar.amount, solar.forecast)
+                    ,maxRH                = ifelse(!is.na(maxRH), maxRH,         relativeHumidity.max)
+                    ,minRH                = ifelse(!is.na(minRH), minRH,         relativeHumidity.min)
+                    ,maxMorningWind       = ifelse(!is.na(maxMorningWind),       maxMorningWind,wind.max)
+                    ,maxWind              = ifelse(!is.na(maxWind), maxWind,     wind.max)
+                    ,averageWind          = ifelse(!is.na(averageWind),          averageWind, wind.average)
+                    ,accumulatedPrecipitation.amount = cumsum(precipitation.amount)
+                    ,accumulatedPrecipitation.average = cumsum(precipitation.average)
+                    ,accumulatedPet.average = cumsum(pet.average)
+                    ,accumulatedPpet.average = cumsum(ppet.average)) %>%
+      dplyr::select(-startTime
+                    ,-endTime
+                    ,-conditionsCode
+                    ,-conditionsText
+                    ,-temperatures.max
+                    ,-temperatures.min
+                    ,-precipitation.chance
+                    ,-precipitation.forecast
+                    ,-sky.cloudCover
+                    ,-sky.sunshine
+                    ,-solar.forecast
+                    ,-relativeHumidity.average
+                    ,-relativeHumidity.max
+                    ,-relativeHumidity.min
+                    ,-wind.average
+                    ,-wind.max
+                    ,-wind.min
+                    ,-dewPoint.amount) %>%
+      as.data.table(.)
 
 
   }
 
   weather_full <- weather_full %>%
-    dplyr::select(day, date,
-                  maxTemp.amount = maxTemp, maxTemp.average, maxTemp.stdDev,
-                  minTemp.amount = minTemp, minTemp.average, minTemp.stdDev,
-                  precipitation.amount, precipitation.average, precipitation.stdDev,
-                  accumulatedPrecipitation.amount, accumulatedPrecipitation.average, accumulatedPrecipitation.stdDev,
-                  gdd.amount = gdd, gdd.average, gdd.stdDev,
-                  pet.amount, pet.average, pet.stdDev,
-                  accumulatedPet.amount, accumulatedPet.average, accumulatedPet.stdDev,
-                  ppet.amount = ppet, ppet.average, ppet.stdDev,
-                  accumulatedPpet.amount = accumulatedPpet, accumulatedPpet.average, accumulatedPpet.stdDev) %>%
+    dplyr::select(day
+                  ,date
+                  ,maxTemp.amount = maxTemp
+                  ,maxTemp.average
+                  ,maxTemp.stdDev
+                  ,minTemp.amount = minTemp
+                  ,minTemp.average
+                  ,minTemp.stdDev
+                  ,precipitation.amount
+                  ,precipitation.average
+                  ,precipitation.stdDev
+                  ,accumulatedPrecipitation.amount
+                  ,accumulatedPrecipitation.average
+                  ,accumulatedPrecipitation.stdDev
+                  ,gdd.amount = gdd
+                  ,gdd.average
+                  ,gdd.stdDev
+                  ,pet.amount
+                  ,pet.average
+                  ,pet.stdDev
+                  ,accumulatedPet.amount
+                  ,accumulatedPet.average
+                  ,accumulatedPet.stdDev
+                  ,ppet.amount = ppet
+                  ,ppet.average
+                  ,ppet.stdDev
+                  ,accumulatedPpet.amount = accumulatedPpet
+                  ,accumulatedPpet.average
+                  ,accumulatedPpet.stdDev) %>%
     dplyr::mutate(latitude = lat,
                   longitude = lon)
 
