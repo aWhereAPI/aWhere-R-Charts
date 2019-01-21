@@ -60,7 +60,8 @@ generateaWhereChart <- function(data
                                 ,e_precip = FALSE 
                                 ,e_threshold = 35 
                                 ,doRoll = FALSE
-                                ,rolling_window = 30) {
+                                ,rolling_window = 30
+                                ,includeSTD = FALSE) {
 
     variable.orig <- copy(variable)
     
@@ -90,7 +91,17 @@ generateaWhereChart <- function(data
              gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
              or rollingavgppet.")
     } else {
-      varsToChart <- c(paste0(variable,'.amount'), paste0(variable,'.average'))
+      varsToChart <- c(paste0(variable,'.amount')
+                       ,paste0(variable,'.average')
+                       ,paste0(variable,'.stdDev'))
+      variableNames <- c("date"
+                          ,"Current"
+                          ,"LTN"
+                          ,"LTNstddev")
+    }
+    
+    if (e_precip == TRUE) {
+      variableNames <- c(variableNames, 'EffectiveCurrent')
     }
     
     #because we are going to change the datastructure and it is a data.table we will
@@ -167,13 +178,15 @@ generateaWhereChart <- function(data
     chart_data <- dataToUse[, c("date", varsToChart),with = FALSE]
   
     #set common names of columns
-    chart_data <- setNames(chart_data, c("date"
-                                         ,"Current"
-                                         ,"LTN"
-                                         ,ifelse(e_precip == TRUE,'EffectiveCurrent','')))
-
-  
+    chart_data <- setNames(chart_data, c(variableNames))
     
+    chart_data[,c('ymax'
+                  ,'ymin'):= list(LTN + LTNstddev
+                                ,LTN - LTNstddev)]
+    
+    chart_data[,LTNstddev := NULL]
+    variableNames <- setdiff(variableNames,'LTNstddev')
+
     #if variable is set to "rollingavgppet", bring in daily precip and pet data 
     #and calculate rolling averages. If e_precip = TRUE, add effective precip
     
@@ -201,36 +214,69 @@ generateaWhereChart <- function(data
                                         ,FUN = mean
                                         ,na.rm = TRUE
                                         ,fill = NA)]
+      
+      #separate out stdDev data into a separate dataframe to calculate ymax and ymin
+      
+      chart_data[,ymax := zoo::rollapply(ymax
+                                        ,width = rolling_window
+                                        ,align = "right"
+                                        ,FUN = mean
+                                        ,na.rm = TRUE
+                                        ,fill = NA)]
+      chart_data[,ymin := zoo::rollapply(ymin
+                                        ,width = rolling_window
+                                        ,align = "right"
+                                        ,FUN = mean
+                                        ,na.rm = TRUE
+                                        ,fill = NA)]
     }
     
     #convert character date column to Date
     chart_data[,date :=as.Date(date)]
     
     #change data format from wide to long
-    chart_data <- tidyr::gather(chart_data, 
-                                key = Variable, 
-                                value = measure, 
-                                2:ncol(chart_data))
+    chart_data_long <- tidyr::gather(chart_data[,variableNames,with = FALSE] 
+                                      ,key = Variable 
+                                      ,value = measure 
+                                      ,2:ncol(chart_data[,variableNames,with = FALSE])) %>%
+      as.data.table(.)
+    
+    
+    chart_data_long <- merge(chart_data_long,chart_data[,list(date,ymin,ymax)], by = 'date')
+    
+    setkey(chart_data_long,Variable,date)
     
     #set color scale based on # of vars to chart
     if(length(unique(chart_data$Variable)) == 2) {
-      colorScaleToUse <- scale_colour_manual(values = c("#1F83B4", "#FF810E")) 
+      colorScaleToUse <- colorFillToUse <- scale_colour_manual(values = c("#1F83B4", "#FF810E")) 
     } else {
-      colorScaleToUse <- scale_colour_manual(values = c("#1F83B4", "#18A188", "#FF810E")) 
+      colorScaleToUse <- colorFillToUse <- scale_colour_manual(values = c("#1F83B4", "#18A188", "#FF810E")) 
     } 
     
     #make chart
-    chart <- 
-      ggplot() + 
+    chart <- ggplot(data = chart_data_long
+                    ,aes(x = date 
+                         ,y = measure 
+                         ,ymax = ymax
+                         ,ymin = ymin
+                         ,group = Variable
+                         ,color = Variable
+                         ,fill = Variable)
+                    ,na.rm = TRUE) + 
       theme_igray() + 
       colorScaleToUse +
-      geom_line(data = chart_data 
-                ,aes(x = date 
-                    ,y = measure 
-                    ,group = Variable
-                    ,color = Variable)
-                ,size = 1.5
-                ,na.rm = TRUE) +
+      colorFillToUse
+    
+    if (includeSTD == TRUE) {
+      chart <- 
+        chart + 
+        geom_ribbon(alpha = 0.3
+                    ,linetype = "blank")
+    }
+    
+    chart <- 
+      chart + 
+      geom_line(size = 1.5) +
       theme(axis.text.x = element_text(angle = 45
                                        ,hjust = 1)) +
       theme(legend.position="bottom"
@@ -242,6 +288,9 @@ generateaWhereChart <- function(data
       geom_vline(xintercept = as.numeric(Sys.Date())
                  ,linetype = "dashed") +
       ggtitle(title)
+   
+    
+    
     
     return(chart)
 }
