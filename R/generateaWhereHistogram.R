@@ -29,9 +29,12 @@
 #' @return plot object
 #'
 #' @examples
-#' \dontrun{generateaWhereHistogram(data = weather_df, variable = "precipitation.amount", compare = TRUE, 
-#'                                  compare_var = "precipitation.average", xlabel = "mm", 
-#'                                  title = "Current vs. LTN Rain across region X, past 30 days")}
+#' \dontrun{generateaWhereHistogram(data = weather_df
+#'                                  ,variable = "precipitation.amount"
+#'                                  ,compare = TRUE
+#'                                  ,compare_var = "precipitation.average"
+#'                                  ,xlabel = "mm"
+#'                                  ,title = "Current vs. LTN Rain across region X, past 30 days")}
 
 #' @export
 
@@ -44,7 +47,6 @@ generateaWhereHistogram <- function(data
                                     ,xlabel = NULL
                                     ,title = NULL) {
   
-  
     #if title is not given by user, set it to date range + variable
     if (is.null(title)) {
       title <- paste0("Aggregated aWhere Data - ", variable)
@@ -53,14 +55,22 @@ generateaWhereHistogram <- function(data
     #filter out relevant data
   
     if (compare == TRUE) {
-      chart_data <- data[, c("latitude", "longitude", variable, compare_var)]
+      chart_data <- data[, c('latitude'
+                              ,'longitude'
+                                ,variable
+                                ,compare_var), with = FALSE]
       chart_data$place <- paste0(chart_data$latitude, ", ", chart_data$longitude)
-      chart_data <- chart_data[, c("place", variable, compare_var)]
+      chart_data <- chart_data[, c('place'
+                                    ,variable
+                                    ,compare_var), with = FALSE]
       chart_data <- setNames(chart_data, c("place", "Current", "LTN"))
     } else {
-      chart_data <- data[, c("latitude", "longitude", variable)]
+      chart_data <- data[, c('latitude'
+                                ,'longitude'
+                                ,variable), with = FALSE]
       chart_data$place <- paste0(chart_data$latitude, ", ", chart_data$longitude)
-      chart_data <- chart_data[, c("place", variable)]
+      chart_data <- chart_data[, c('place'
+                                      ,variable), with = FALSE]
       chart_data <- setNames(chart_data, c("place", "Current"))
     }
   
@@ -68,7 +78,8 @@ generateaWhereHistogram <- function(data
     chart_data <- tidyr::gather(chart_data, 
                                 key = Variable, 
                                 value = measure, 
-                                2:ncol(chart_data))
+                                2:ncol(chart_data)) %>%
+      as.data.table(.)
     
     #set common names of columns and xlabel (if not specified)
     if (is.null(xlabel)) {
@@ -91,10 +102,10 @@ generateaWhereHistogram <- function(data
     } 
   
     #set x axis scale
-    xScale <- scale_x_continuous(breaks = seq(from = min(chart_data$measure), 
-                                              to = max(chart_data$measure),
-                                              by = as.integer((as.integer(max(chart_data$measure)) 
-                                                               - as.integer(min(chart_data$measure)))/10)))
+    xScale <- scale_x_continuous(breaks = seq(from = chart_data[,min(measure)] 
+                                              ,to = chart_data[,max(measure)]
+                                              ,by = floor((ceiling(chart_data[,max(measure)]) - 
+                                                                            floor(chart_data[,min(measure)]))/10)))
     
     #make chart
 
