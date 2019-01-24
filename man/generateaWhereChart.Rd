@@ -4,15 +4,22 @@
 \alias{generateaWhereChart}
 \title{generateaWhereChart}
 \usage{
-generateaWhereChart(data, variable, title, e_precip = FALSE,
-  e_threshold = 35, rolling_window = 30)
+generateaWhereChart(data, variable, variable_rightAxis = NULL,
+  title = NULL, e_precip = FALSE, e_threshold = 35, doRoll = FALSE,
+  rolling_window = 30, includeSTD = FALSE, maingraphType = "line")
 }
 \arguments{
 \item{-}{data: data frame in which variables are named according to the schema output by generateaWhereChart.R (required)}
 
 \item{-}{variable: character string denoting the variable to chart. Acceptable values 
-are precipitation, accumulatedPrecipitation, maxTemp, minTemp, pet, accumulatedPet, ppet, 
+are accumulatedGdd, accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
+gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
 or rollingavgppet. (required)}
+
+\item{-}{variable_rightAxis:  What variable to plot over the primary variable.
+The right y-axis of the plot will be used to present its range.  
+Note that it will always be plotted as a line chart. Same valid
+values as the variable param.  (optional)}
 
 \item{-}{title: character string of title to assign to the plot. (required)}
 
@@ -22,9 +29,14 @@ be calculated and charted based on e_threshold. Default is set to FALSE. (option
 \item{-}{e_threshold: numeric value (in milimeters) for the daily maximum used to calculate 
 effective precipitation if e_precip is set to TRUE. (optional)}
 
+\item{-}{doRoll: apply a rolling average to the calculation.}
+
 \item{-}{rolling_window: numeric value for the number of days to use in rolling 
-average calculations, only applicable if the variable parameter is set to
-"rollingavgppet". Default value is 30. (optional)}
+average calculations.  Default value is 30. (optional)}
+
+\item{-}{includeSTD: whether to plot the standard deviation as a ribbon around the LTN value of the main variable. (optional)}
+
+\item{-}{maingraphType Which type of graph to make for the main plot.  Valid values are "line" and "bar" (optional)}
 }
 \value{
 plot object
@@ -50,9 +62,11 @@ in times of high volumes of rain. The default value of e_threshold is 35 mm.
 The standard plot formatting is generated using ggplot2's gray theme.
 }
 \examples{
-\dontrun{generateaWhereChart(data = weather_df, variable = "accumulatedPrecipitation", 
-                             title = "Accumulated Precipitation values at Location from Xdate to Ydate",
-                             e_precip = TRUE, e_threshold = 20)}
+\dontrun{generateaWhereChart(data = weather_df
+                             ,variable = "accumulatedPrecipitation" 
+                             ,e_precip = TRUE
+                             ,e_threshold = 10
+                             ,doRoll = TRUE)}
 }
 \references{
 http://developer.awhere.com/api/reference/

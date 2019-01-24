@@ -4,14 +4,16 @@
 \alias{generateaWhereStdDevChart}
 \title{generateaWhereStdDevChart}
 \usage{
-generateaWhereStdDevChart(data, variable, title = NULL, e_precip = FALSE,
-  e_threshold = 35, rolling_window = 30)
+generateaWhereStdDevChart(data, variable, title = NULL,
+  e_precip = FALSE, e_threshold = 35, doRoll = TRUE,
+  rolling_window = 30)
 }
 \arguments{
 \item{-}{data: data frame in which variables are named according to the aWhere API conventions (required)}
 
 \item{-}{variable: character string denoting the variable to chart. Acceptable values 
-are precipitation, accumulatedPrecipitation, maxTemp, minTemp, pet, accumulatedPet, ppet,
+are accumulatedGdd, accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
+gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
 or rollingavgppet. (required)}
 
 \item{-}{title: character string of title to assign to the plot. (required)}
@@ -45,9 +47,11 @@ function, but it should be noted that as the datespan increases, the standard de
 which are accumulations is likely to become increasingly wide.
 }
 \examples{
-\dontrun{generateaWhereStdDevChart(data = weather_df, variable = "accumulatedPrecipitation", 
-                             title = "Accumulated Precipitation values at Location from Xdate to Ydate",
-                             e_precip = TRUE, e_threshold = 20)}
+\dontrun{generateaWhereStdDevChart(data = weather_df
+                                   ,variable = "accumulatedPrecipitation" 
+                                   ,title = "Accumulated Precipitation values at Location from Xdate to Ydate"
+                                   ,e_precip = TRUE
+                                   ,e_threshold = 20)}
 }
 \references{
 http://developer.awhere.com/api/reference/

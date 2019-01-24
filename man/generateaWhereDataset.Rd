@@ -44,12 +44,10 @@ function calls or merging the results.
 \examples{
 \dontrun{generateaWhereDataset(lat = 30.685
                               ,lon = 72.928
-                              ,day_start = "2017-01-01"
-                              ,day_end = "2017-06-01"
+                              ,day_start = "2018-09-01"
+                              ,day_end = "2019-01-20"
                               ,year_start = 2008
-                              ,year_end = 2017
-                              )
-        }
+                              ,year_end = 2018)}
 }
 \references{
 http://developer.awhere.com/api/reference/

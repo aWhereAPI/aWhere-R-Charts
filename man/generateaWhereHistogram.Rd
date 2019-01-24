@@ -4,8 +4,8 @@
 \alias{generateaWhereHistogram}
 \title{generateaWhereHistogram}
 \usage{
-generateaWhereHistogram(data, variable, compare = FALSE, compare_var = NULL,
-  xlabel = NULL, title = NULL)
+generateaWhereHistogram(data, variable, compare = FALSE,
+  compare_var = NULL, xlabel = NULL, title = NULL)
 }
 \arguments{
 \item{-}{data: data frame containing multiple observations - observations can be across time or locations (required)}
@@ -36,9 +36,12 @@ function can work with any dataset, since unlike with the generateaWhereChart an
 generateaWhereStdDevChart functions, the input variable names are not restricted.
 }
 \examples{
-\dontrun{generateaWhereHistogram(data = weather_df, variable = "precipitation.amount", compare = TRUE, 
-                                 compare_var = "precipitation.average", xlabel = "mm", 
-                                 title = "Current vs. LTN Rain across region X, past 30 days")}
+\dontrun{generateaWhereHistogram(data = weather_df
+                                 ,variable = "precipitation.amount"
+                                 ,compare = TRUE
+                                 ,compare_var = "precipitation.average"
+                                 ,xlabel = "mm"
+                                 ,title = "Current vs. LTN Rain across region X, past 30 days")}
 }
 \references{
 
