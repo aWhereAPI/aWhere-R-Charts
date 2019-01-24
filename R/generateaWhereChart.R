@@ -24,16 +24,23 @@
 #'
 #' @param - data: data frame in which variables are named according to the schema output by generateaWhereChart.R (required)
 #' @param - variable: character string denoting the variable to chart. Acceptable values 
-#'             are precipitation, accumulatedPrecipitation, maxTemp, minTemp, pet, accumulatedPet, ppet, 
+#'             are accumulatedGdd, accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
+#'             gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
 #'             or rollingavgppet. (required)
+#' @param - variable_rightAxis:  What variable to plot over the primary variable.  
+#'                The right y-axis of the plot will be used to present its range.  
+#'                Note that it will always be plotted as a line chart. Same valid
+#'                values as the variable param.  (optional)
 #' @param - title: character string of title to assign to the plot. (required)
 #' @param - e_precip: logical, if set to TRUE, effective precipitation will 
 #'             be calculated and charted based on e_threshold. Default is set to FALSE. (optional)
 #' @param - e_threshold: numeric value (in milimeters) for the daily maximum used to calculate 
 #'             effective precipitation if e_precip is set to TRUE. (optional)
+#' @param - doRoll: apply a rolling average to the calculation.
 #' @param - rolling_window: numeric value for the number of days to use in rolling 
-#'             average calculations, only applicable if the variable parameter is set to
-#'             "rollingavgppet". Default value is 30. (optional)
+#'             average calculations.  Default value is 30. (optional)
+#' @param - includeSTD: whether to plot the standard deviation as a ribbon around the LTN value of the main variable. (optional)
+#' @param - maingraphType Which type of graph to make for the main plot.  Valid values are "line" and "bar" (optional)
 #'
 #' @import tidyr
 #' @import dplyr
@@ -44,145 +51,339 @@
 #' @return plot object
 #'
 #' @examples
-#' \dontrun{generateaWhereChart(data = weather_df, variable = "accumulatedPrecipitation", 
-#'                              title = "Accumulated Precipitation values at Location from Xdate to Ydate",
-#'                              e_precip = TRUE, e_threshold = 20)}
+#' \dontrun{generateaWhereChart(data = weather_df
+#'                              ,variable = "accumulatedPrecipitation" 
+#'                              ,e_precip = TRUE
+#'                              ,e_threshold = 10
+#'                              ,doRoll = TRUE)}
 
 #' @export
 
 
 generateaWhereChart <- function(data
-                                ,variable 
-                                ,title 
+                                ,variable
+                                ,variable_rightAxis = NULL
+                                ,title = NULL
                                 ,e_precip = FALSE 
                                 ,e_threshold = 35 
-                                ,rolling_window = 30) {
-
-    ##determine vars to chart
-    if(variable %in% c("precipitation", "accumulatedPrecipitation",
-                       "maxTemp", "minTemp", "pet", "accumulatedPet",
-                       "ppet")) {
-      
-      varsToChart <- c(paste0(variable,'.amount'), paste0(variable,'.average'))    
-      
-    } else if(variable == "rollingavgppet") {
-      
-      varsToChart <- c("ppet.amount", "ppet.average")    
-      
-    } else {
-      
-      stop("Input Variable is not from allowed list. Please use precipitation, accumulatedPrecipitation, 
-           maxTemp, minTemp, pet, accumulatedPet, ppet, or rollingavgppet.")
-      
+                                ,doRoll = FALSE
+                                ,rolling_window = 30
+                                ,includeSTD = FALSE
+                                ,maingraphType = 'line') {
+    
+    #We are using a list consturct to hold all variables so we can loop over its length
+    temp_variable   <- copy(variable)
+    variable        <- list()
+    variable.orig   <- list()
+    varsToChart     <- list()
+    variableNames   <- list()
+    ylabel          <- list()
+    chart_data      <- list()
+    chart_data_long <- list()
+    scalingFactor   <- list()
+    
+    variable[[1]] <- copy(temp_variable)
+    variable.orig[[1]] <- copy(variable[[1]])
+    
+    if (is.null(variable_rightAxis) == FALSE) {
+      variable[[2]] <- copy(variable_rightAxis)
+      variable.orig[[2]] <- copy(variable_rightAxis)
     }
     
-    ##set ylabel
-    if(variable %in% c("precipitation", "accumulatedPrecipitation",
-                       "pet", "accumulatedPet")) {
+    for (x in 1:length(variable)) {
       
-      ylabel = "mm"
-      
-    } else if(variable %in% c("maxTemp", "minTemp")) {
-      
-      ylabel <- "Celsius"  
-      
-    } else {
-      
-      ylabel = "Index"
-      
-    }
-
-    #if title is not given by user, set it to date range + variable
-    if (is.null(title)) {
-      title <- paste0(variable, " from ", max(data$date), " to ", min(data$date))
-    }
-    
-    #filter out relevant data
-    chart_data <- data[, c("date", varsToChart)]
-  
-    #set common names of columns
-    chart_data <- setNames(chart_data, c("date", "Current", "LTN"))
-
-    #if e_precip is set to true, bring in daily precip data and calculate accumulated
-    #daily precipitation using either default or user-defined threshold
-    
-    if(variable == "accumulatedPrecipitation" & e_precip == TRUE) {
-      temp <- data[, c("date", "precipitation.amount")]
-      chart_data <- merge(chart_data, temp, by = "date")
-      chart_data$precipitation.amount[chart_data$precipitation.amount > e_threshold ] <- e_threshold
-      chart_data <- dplyr::mutate(chart_data,
-                                  EffectiveCurrent = cumsum(chart_data$precipitation.amount))
-      chart_data <- dplyr::select(chart_data, -precipitation.amount)
-    }
-    
-    #if variable is set to "rollingavgppet", bring in daily precip and pet data 
-    #and calculate rolling averages. If e_precip = TRUE, add effective precip
-    
-    if(variable == "rollingavgppet") {
-      if(e_precip == TRUE) {
-        temp <- data[, c("date", "precipitation.amount", "pet.amount")]
-        chart_data <- merge(chart_data, temp, by = "date")
-        chart_data$precipitation.amount[chart_data$precipitation.amount > e_threshold ] <- e_threshold
-        chart_data <- dplyr::mutate(chart_data,
-                                    EffectiveCurrent = precipitation.amount/pet.amount)
-        chart_data <- dplyr::select(chart_data, -precipitation.amount, -pet.amount)
-        
-        chart_data$EffectiveCurrent <- zoo::rollapply(chart_data$EffectiveCurrent 
-                                        ,width = rolling_window 
-                                        ,align = "right"
-                                        ,FUN = mean
-                                        ,na.rm = TRUE
-                                        ,fill = NA)
+      #rename variable to match appropriate column in data
+      if (variable[[x]] == 'maxTemp') {
+        variable[[x]] <- 'temperatures.max'
+      } else if (variable[[x]] == 'minTemp') {
+        variable[[x]] <- 'temperatures.min'
+      } else if (variable[[x]] == 'maxRH') {
+        variable[[x]] <- 'relativeHumidity.max'
+      } else if (variable[[x]] == 'minRH') {
+        variable[[x]] <- 'relativeHumidity.min'
+      } else if (variable[[x]] == 'averageWind') {
+        variable[[x]] <- 'wind.average'
+      } else if (variable[[x]] == 'dayMaxWind') {
+        variable[[x]] <- 'wind.dayMax'
+      } else if (variable[[x]] == 'rollingavgppet') {
+        variable[[x]] <- 'ppet'
+        doRoll <- TRUE
       }
       
-      chart_data$Current <- zoo::rollapply(chart_data$Current 
-                                      ,width = rolling_window 
-                                      ,align = "right"
-                                      ,FUN = mean
-                                      ,na.rm = TRUE
-                                      ,fill = NA)
+      #Confirm chosen variable is in the data structure
+      if (any(grepl(pattern = variable[[x]]
+                    ,x = colnames(data)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Input Variable is not from allowed list. Please use ccumulatedGdd, 
+             accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
+             gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
+             or rollingavgppet.")
+      } else {
+        varsToChart[[x]] <- c(paste0(variable[[x]],'.amount')
+                              ,paste0(variable[[x]],'.average')
+                              ,paste0(variable[[x]],'.stdDev'))
+        
+        variableNames[[x]] <- c("date"
+                                ,"Current"
+                                ,"LTN"
+                                ,"LTNstddev")
+      }
       
-      chart_data$LTN <-     zoo::rollapply(chart_data$LTN
-                                      ,width = rolling_window
-                                      ,align = "right"
-                                      ,FUN = mean
-                                      ,na.rm = TRUE
-                                      ,fill = NA)
+      #because we are going to change the datastructure and it is a data.table we
+      #will explicitly copy what is passed in so it doesn't violate user's scoping
+      #expectations 
+      if (e_precip == FALSE) {
+        dataToUse <- data
+        
+      } else if (grepl(pattern = 'precipitation'
+                       ,x = variable[[x]]
+                       ,ignore.case = TRUE) | grepl(pattern = 'Ppet'
+                                                    ,x = variable[[x]]
+                                                    ,ignore.case = TRUE)) {
+        dataToUse <- copy(data)
+        
+        
+        #if e_precip is set to true, bring in daily precip data and calculate accumulated
+        #daily precipitation using either default or user-defined threshold
+        
+        
+        dataToUse[,precipitation.amount.effective := precipitation.amount]
+        
+        dataToUse[precipitation.amount > e_threshold, precipitation.amount.effective := e_threshold]
+        dataToUse[,ppet.amount.effective := precipitation.amount.effective / pet.amount]
+        
+        dataToUse[,accumulatedPrecipitation.amount.effective := cumsum(precipitation.amount.effective)]
+        dataToUse[,accumulatedPpet.amount.effective := cumsum(ppet.amount.effective)]
+        
+        varsToChart[[x]] <- c(varsToChart[[x]],paste0(variable[[x]],'.amount.effective'))
+        variableNames[[x]] <- c(variableNames[[x]], 'EffectiveCurrent')
+      }
+      
+      #PUT IN TEMPORAL AGGREGATIONS HERE
+      
+      ##set ylabel
+      if (grepl(pattern = 'Gdd'
+                ,x = variable[[x]]
+                ,ignore.case = TRUE) == TRUE) {
+        ylabel[[x]] = 'GDDs'
+      } else if (grepl(pattern = 'PPet'
+                       ,x = variable[[x]]
+                       ,ignore.case = TRUE) == TRUE) {
+        ylabel[[x]] = 'Index'
+      } else if (grepl(pattern = 'Pet'
+                       ,x = variable[[x]]
+                       ,ignore.case = TRUE) == TRUE) {
+        ylabel[[x]] = 'mm'
+      } else if (grepl(pattern = 'precipitation'
+                       ,x = variable[[x]]
+                       ,ignore.case = TRUE) == TRUE) {
+        ylabel[[x]] = 'mm'
+      } else if (grepl(pattern = 'relativeHumidity'
+                       ,x = variable[[x]]
+                       ,ignore.case = TRUE) == TRUE) {
+        ylabel[[x]] = '%'
+      } else if (grepl(pattern = 'solar'
+                       ,x = variable[[x]]
+                       ,ignore.case = TRUE) == TRUE) {
+        ylabel[[x]] = 'Wh/m^2'
+      } else if (grepl(pattern = 'temperatures'
+                       ,x = variable[[x]]
+                       ,ignore.case = TRUE) == TRUE) {
+        ylabel[[x]] = 'Celcius'
+      } else if (grepl(pattern = 'wind'
+                       ,x = variable[[x]]
+                       ,ignore.case = TRUE) == TRUE) {
+        ylabel[[x]] = 'm/s'
+      }
+      
+      #filter out relevant data
+      chart_data[[x]] <- dataToUse[, c("date", varsToChart[[x]]),with = FALSE]
+      
+      #set common names of columns
+      chart_data[[x]] <- setNames(chart_data[[x]], c(variableNames[[x]]))
+      
+      
+      
+      chart_data[[x]][,c('ymax'
+                        ,'ymin'):= list(LTN + LTNstddev
+                                        ,LTN - LTNstddev)]
+      
+      if (grepl(pattern = 'Gdd|PPet|Pet|precipitation|relativeHumidity|solar|wind'
+                ,x = variable[[x]])) {
+        chart_data[[x]][ymin < 0, ymin := 0]
+      }
+      
+      chart_data[[x]][,LTNstddev := NULL]
+      variableNames[[x]] <- setdiff(variableNames[[x]]
+                                    ,'LTNstddev')
+      
+      #if variable is set to "rollingavgppet", bring in daily precip and pet data 
+      #and calculate rolling averages. If e_precip = TRUE, add effective precip
+      
+      if(doRoll == TRUE) {
+        if(e_precip == TRUE & any(grepl(pattern = 'EffectiveCurrent'
+                                        ,x = colnames(chart_data[[x]])
+                                        ,fixed = TRUE))) {
+          
+          chart_data[[x]][,EffectiveCurrent := zoo::rollapply(EffectiveCurrent 
+                                                             ,width = rolling_window 
+                                                             ,align = "right"
+                                                             ,FUN = mean
+                                                             ,na.rm = TRUE
+                                                             ,fill = NA)]
+        }
+        
+        chart_data[[x]][,Current := zoo::rollapply(Current 
+                                                  ,width = rolling_window 
+                                                  ,align = "right"
+                                                  ,FUN = mean
+                                                  ,na.rm = TRUE
+                                                  ,fill = NA)]
+        
+        chart_data[[x]][,LTN := zoo::rollapply(LTN
+                                              ,width = rolling_window
+                                              ,align = "right"
+                                              ,FUN = mean
+                                              ,na.rm = TRUE
+                                              ,fill = NA)]
+        
+        #for plotting SD info
+        chart_data[[x]][,ymax := zoo::rollapply(ymax
+                                               ,width = rolling_window
+                                               ,align = "right"
+                                               ,FUN = mean
+                                               ,na.rm = TRUE
+                                               ,fill = NA)]
+        chart_data[[x]][,ymin := zoo::rollapply(ymin
+                                               ,width = rolling_window
+                                               ,align = "right"
+                                               ,FUN = mean
+                                               ,na.rm = TRUE
+                                               ,fill = NA)]
+      }
+      
+      #Add identifying variable information to variable names
+      variableNames[[x]][-1] <- paste0(variableNames[[x]][-1],'-',variable[[x]])
+      
+      setnames(chart_data[[x]]
+               ,setdiff(colnames(chart_data[[x]])[-1],c('ymin','ymax'))
+               ,paste0(setdiff(colnames(chart_data[[x]])[-1],c('ymin','ymax')),'-',variable[[x]]))
+      
+      #convert character date column to Date
+      chart_data[[x]][,date :=as.Date(date)]
+      
+      #change data format from wide to long
+      chart_data_long[[x]] <- tidyr::gather(chart_data[[x]][,variableNames[[x]],with = FALSE] 
+                                           ,key = Variable 
+                                           ,value = measure 
+                                           ,2:ncol(chart_data[[x]][,variableNames[[x]],with = FALSE])) %>%
+        as.data.table(.)
+      
+      
+      chart_data_long[[x]] <- merge(chart_data_long[[x]]
+                                    ,chart_data[[x]][,list(date,ymin,ymax)]
+                                    ,by = 'date')
+      
+      setkey(chart_data_long[[x]],Variable,date)
     }
     
-    #convert character date column to Date
-    chart_data$date <- as.Date(chart_data$date)
+    #if title is not given by user, set it to date range + variable
+    if (is.null(title)) {
+      title <- paste0(paste0(variable.orig,collapse = ' & '), " from ", min(dataToUse$date), " to ", max(dataToUse$date))
+    }
     
-    #change data format from wide to long
-    chart_data <- tidyr::gather(chart_data, 
-                                key = Variable, 
-                                value = measure, 
-                                2:ncol(chart_data))
+    #Because of how ggplot functions, we need to calculate the scaling factor between the two axis
+    for (x in 1:length(chart_data_long)) {
+      if (x == 1) {
+        rangeToUse <- diff(chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])
+        scalingFactor[[x]] <- 1
+      } else {
+        scalingFactor[[x]] <- diff(chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])/rangeToUse
+      }
+    }
     
-    #set color scale based on # of vars to chart
-    if(length(unique(chart_data$Variable)) == 2) {
-      colorScaleToUse <- scale_colour_manual(values = c("#1F83B4", "#FF810E")) 
+    
+    #make chart based on appropriate graph type
+
+    if (mainGraphType == 'line') {
+      chart <- 
+        ggplot(data = chart_data_long[[1]]
+               ,aes(x = date)
+               ,na.rm = TRUE) 
+      #include SD info for main variable
+      if (includeSTD == TRUE) {
+        chart <- 
+          chart + 
+          geom_ribbon(aes(ymin = ymin
+                          ,ymax = ymax
+                          ,fill = paste0('SD of ',variable[[1]]))
+                      ,alpha = 0.3
+                      ,linetype = "blank") +
+          scale_fill_manual("",values="grey12")
+      }
+      
+      #plot actual lines on top
+      chart <- 
+        chart + 
+        geom_line(aes(y = measure
+                      ,colour = Variable)
+                  ,size = 1.5)
     } else {
-      colorScaleToUse <- scale_colour_manual(values = c("#1F83B4", "#18A188", "#FF810E")) 
-    } 
+      chart <- 
+        ggplot() +
+        geom_col(data = chart_data_long[[1]][!grepl(pattern = 'LTN',x = Variable,fixed = TRUE)], 
+                 aes(x = date
+                     ,y = measure
+                     ,fill = Variable)
+                 ,position = 'stack'
+                 ,alpha = 0.4
+                 ,na.rm = TRUE) +
+        geom_line(data = chart_data_long[[1]][grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
+                  ,aes(x = date
+                       ,y = measure
+                       ,colour = Variable)
+                  ,na.rm = TRUE
+                  ,size = 1) +
+        scale_colour_manual(values = c("#1F83B4", "#18A188", "#FF810E")) 
+    }
     
-    #make chart
-    chart <- ggplot() + theme_igray() + colorScaleToUse +
-      geom_line(data = chart_data, 
-                aes(x = date, 
-                    y = measure, 
-                    group = Variable,
-                    color = Variable),
-                size = 1.5,
-                na.rm = TRUE) +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-      theme(legend.position="bottom", legend.direction="horizontal",
-            legend.title = element_blank()) +
-      labs(x="Date", y = ylabel) +
+    #add in line charts for other variables
+    if (length(chart_data_long) > 1) {
+      for (x in 2:length(chart_data_long)) {
+        chart <-
+          chart +
+          geom_line(data = chart_data_long[[x]]
+                    ,aes(x = date
+                         ,y = measure/scalingFactor[[x]]
+                         ,colour = Variable)
+                    ,size = 1.5) +
+          scale_y_continuous(sec.axis = sec_axis(~.*scalingFactor[[x]]
+                                                 ,name = ylabel[[x]])) 
+      }
+    }
+    
+    #format figure
+    chart <- 
+      chart +
+      theme_igray() + 
+      theme(axis.text.x = element_text(angle = 45
+                                       ,hjust = 1)) +
+      theme(legend.position="bottom"
+            ,legend.direction="horizontal"
+            ,legend.title = element_blank()) +
+      labs(x="Date"
+           ,y = ylabel[[1]]) +
       #the next two lines may be commented out if the vertical current date line is not desired
-      geom_vline(xintercept = as.numeric(Sys.Date()),
-                 linetype = "dashed") +
-      ggtitle(title)
+      geom_vline(xintercept = as.numeric(Sys.Date())
+                 ,linetype = "dashed") +
+      ggtitle(title) +
+      guides(colour = guide_legend(ncol = 2
+                                   ,byrow = FALSE)) +
+      guides(fill = guide_legend(ncol= 1
+                                ,byrow = FALSE))
+    
+    
+    
     
     return(chart)
 }

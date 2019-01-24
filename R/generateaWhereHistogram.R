@@ -29,9 +29,12 @@
 #' @return plot object
 #'
 #' @examples
-#' \dontrun{generateaWhereHistogram(data = weather_df, variable = "precipitation.amount", compare = TRUE, 
-#'                                  compare_var = "precipitation.average", xlabel = "mm", 
-#'                                  title = "Current vs. LTN Rain across region X, past 30 days")}
+#' \dontrun{generateaWhereHistogram(data = weather_df
+#'                                  ,variable = "precipitation.amount"
+#'                                  ,compare = TRUE
+#'                                  ,compare_var = "precipitation.average"
+#'                                  ,xlabel = "mm"
+#'                                  ,title = "Current vs. LTN Rain across region X, past 30 days")}
 
 #' @export
 
@@ -44,74 +47,75 @@ generateaWhereHistogram <- function(data
                                     ,xlabel = NULL
                                     ,title = NULL) {
   
-  
-    #if title is not given by user, set it to date range + variable
-    if (is.null(title)) {
-      title <- paste0("Aggregated aWhere Data - ", variable)
+  #if title is not given by user, set it to date range + variable
+  if (is.null(title)) {
+    title <- paste0("Aggregated aWhere Data - ", variable)
     }
   
-    #filter out relevant data
+  #set common names of columns and xlabel (if not specified)
+  if (is.null(xlabel)) {
+    xlabel <- variable
+  }
   
-    if (compare == TRUE) {
-      chart_data <- data[, c("latitude", "longitude", variable, compare_var)]
-      chart_data$place <- paste0(chart_data$latitude, ", ", chart_data$longitude)
-      chart_data <- chart_data[, c("place", variable, compare_var)]
-      chart_data <- setNames(chart_data, c("place", "Current", "LTN"))
-    } else {
-      chart_data <- data[, c("latitude", "longitude", variable)]
-      chart_data$place <- paste0(chart_data$latitude, ", ", chart_data$longitude)
-      chart_data <- chart_data[, c("place", variable)]
-      chart_data <- setNames(chart_data, c("place", "Current"))
-    }
+  #filter out relevant data
+  variablesToInclude <- c('latitude'
+                        ,'longitude'
+                        ,variable)
   
-    #set data format as long
-    chart_data <- tidyr::gather(chart_data, 
-                                key = Variable, 
-                                value = measure, 
-                                2:ncol(chart_data))
-    
-    #set common names of columns and xlabel (if not specified)
-    if (is.null(xlabel)) {
-      xlabel <- variable
-    }
+  variableNames <- c("place", "Current")
 
+  if (compare == TRUE) {
     
-  
-    #set color scale based on # of vars to chart
-    if(length(unique(chart_data$Variable)) == 2) {
-      colorScaleToUse <- scale_colour_manual(values = c("#1696AC", "#FF810E")) 
-    } else {
-      colorScaleToUse <- scale_colour_manual(values = c("#1696AC")) 
-    } 
-  
-    if(length(unique(chart_data$Variable)) == 2) {
-      colorFillToUse <- scale_fill_manual(values = c("#1F83B4", "#FF810E")) 
-    } else {
-      colorFillToUse <- scale_fill_manual(values = c("#1F83B4")) 
-    } 
-  
-    #set x axis scale
-    xScale <- scale_x_continuous(breaks = seq(from = min(chart_data$measure), 
-                                              to = max(chart_data$measure),
-                                              by = as.integer((as.integer(max(chart_data$measure)) 
-                                                               - as.integer(min(chart_data$measure)))/10)))
+    variablesToInclude <- c(variablesToInclude
+                            ,compare_var)
     
-    #make chart
+    variableNames <- c(variableNames, 'LTN')
+  } 
+  
+  chart_data <- data[, variablesToInclude, with = FALSE]
+  
+  chart_data[,place := paste0(chart_data$latitude, ", ", chart_data$longitude)]
+  
+  chart_data <- chart_data[, c('place',variablesToInclude[-c(1,2)]), with = FALSE]
+  
+  chart_data <- setNames(chart_data, variableNames)
 
-    chart <- ggplot() + 
-      theme_igray() + 
-      geom_histogram(data = chart_data, 
-                     aes(measure,
-                         col = Variable, 
-                         fill = Variable),
-                     position = 'identity',
-                     bins = 40,
-                     alpha = 0.4) +
-      xScale +
-      theme(legend.position="bottom", legend.direction="horizontal",
-             legend.title = element_blank()) +
-      labs(x=xlabel, y = "Count of Locations") +
-      ggtitle(title)
+
+  #set data format as long
+  chart_data <- tidyr::gather(chart_data, 
+                              key = Variable, 
+                              value = measure, 
+                              2:ncol(chart_data)) %>%
+    as.data.table(.)
+
+  #set color scale based on # of vars to chart
+  if(length(unique(chart_data$Variable)) == 2) {
+    colorScaleToUse <- colorFillToUse <- scale_colour_manual(values = c("#1696AC", "#FF810E")) 
+  } else {
+    colorScaleToUse <- colorFillToUse <- scale_colour_manual(values = c("#1696AC")) 
+  } 
+
+  #set x axis scale
+  xScale <- scale_x_continuous(breaks = seq(from = chart_data[,min(measure)] 
+                                            ,to = chart_data[,max(measure)]
+                                            ,by = floor((ceiling(chart_data[,max(measure)]) - 
+                                                                          floor(chart_data[,min(measure)]))/10)))
+  
+  #make chart
+  chart <- ggplot() + 
+    theme_igray() + 
+    geom_histogram(data = chart_data, 
+                   aes(measure,
+                       col = Variable, 
+                       fill = Variable),
+                   position = 'identity',
+                   bins = 40,
+                   alpha = 0.4) +
+    xScale +
+    theme(legend.position="bottom", legend.direction="horizontal",
+           legend.title = element_blank()) +
+    labs(x=xlabel, y = "Count of Locations") +
+    ggtitle(title)
     
-    return(chart)
+  return(chart)
 }
