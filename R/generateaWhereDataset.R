@@ -303,8 +303,8 @@ generateaWhereDataset <- function(lat
   } else {
     forecast <- data.frame(latitude = 0
                       ,longitude = 0
-                      ,date = Sys.Date()
-                      ,day = 0
+                      ,date = ymd(Sys.Date())
+                      ,day = as.character(0)
                       ,forecast.temperatures.max = 0
                       ,forecast.temperatures.min = 0
                       ,forecast.precipitation.amount = 0
