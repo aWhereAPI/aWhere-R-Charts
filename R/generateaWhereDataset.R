@@ -50,7 +50,8 @@ generateaWhereDataset <- function(lat
                                   ,day_start
                                   ,day_end
                                   ,year_start
-                                  ,year_end) {
+                                  ,year_end
+                                  ,verbose = TRUE) {
 
   if (exists('awhereEnv75247') == FALSE) {
     stop('Please load credentials for aWhereAPI before continuing')
@@ -74,6 +75,11 @@ generateaWhereDataset <- function(lat
   #date that makes a valid return from the historical API and then use that
   #going forward.  Subsequent forecast calls will use this date + 1 as their starting point
   
+  if (verbose == TRUE) {
+    cat(paste0('    Adjusting Query for differences in time zone between user and location being requested \n'))
+  }
+  
+  
   if((day_start >= (Sys.Date()+2)) == TRUE) {
     onlyForecastRequested <- TRUE
   } else {
@@ -81,6 +87,7 @@ generateaWhereDataset <- function(lat
     
     repeatQuery <- TRUE
     while(repeatQuery == TRUE) {
+  
       repeatQuery <- FALSE
       
       temp <- tryCatch({
@@ -102,7 +109,7 @@ generateaWhereDataset <- function(lat
         repeatQuery <- temp[[1]][1]
         dateToTest <- temp[[2]][1]
         
-        rm(temp)
+       # rm(temp)
       }
     }
     
@@ -166,6 +173,11 @@ generateaWhereDataset <- function(lat
   #to have logic so that the obs data structure is present regardless of whether
   # we will actually have historical data for later joins to work
   if (onlyForecastRequested == FALSE) {
+    if (verbose == TRUE) {
+      cat(paste0('    Requesting observed weather data \n'))
+    }
+    
+    
     obs <- suppressWarnings(aWhereAPI::daily_observed_latlng(lat
                                                              ,lon
                                                              ,day_start
@@ -206,6 +218,10 @@ generateaWhereDataset <- function(lat
 #Get observed Agronomics data
 ##############################################################################
 
+  if (verbose == TRUE) {
+    cat(paste0('    Requesting observed agronomics data \n'))
+  }
+  
   ##This works becayse the Ag endpoint includes forecast data
   ag <- suppressWarnings(aWhereAPI::agronomic_values_latlng(latitude = lat
                                                             ,longitude = lon
@@ -226,6 +242,10 @@ generateaWhereDataset <- function(lat
 #Get LTN Weather data
 ##############################################################################
     
+  if (verbose == TRUE) {
+    cat(paste0('    Requesting LTN weather data \n'))
+  }
+  
   obs_ltn <- suppressWarnings(aWhereAPI::weather_norms_latlng(latitude = lat
                                                               ,longitude = lon
                                                               ,monthday_start = monthday_start
@@ -245,6 +265,10 @@ generateaWhereDataset <- function(lat
 ###############################################################################
 #Get LTN Agronomics data
 ##############################################################################
+  
+  if (verbose == TRUE) {
+    cat(paste0('    Requesting LTN agronomics data \n'))
+  }
   
   ag_ltn <- suppressWarnings(aWhereAPI::agronomic_norms_latlng(latitude = lat
                                                                ,longitude = lon
@@ -271,6 +295,11 @@ generateaWhereDataset <- function(lat
   #
   
   if (interim_day_end != day_end) {
+    
+    if (verbose == TRUE) {
+      cat(paste0('    Requested forecast weather data \n'))
+    }
+    
     forecast <- aWhereAPI::forecasts_latlng(lat
                                             ,lon
                                             ,day_start = as.character(interim_day_end + 1)
@@ -321,7 +350,7 @@ generateaWhereDataset <- function(lat
 ###############################################################################
 #REPLACE ANY MISSING DATA WITH LTN VALUES
 ##############################################################################
-
+  
   if(all(complete.cases(obs) == TRUE) == FALSE) {
     
     obs.names <- colnames(obs)
@@ -371,6 +400,11 @@ generateaWhereDataset <- function(lat
 #Assemble final dataset
 ##############################################################################
 
+  
+  if (verbose == TRUE) {
+    cat(paste0('    Combining together data\n'))
+  }
+  
   weather_full <- merge(obs,          ag,      by = c("date", "day", "latitude", "longitude"), all = TRUE)
   weather_full <- merge(weather_full, obs_ltn, by = c("day", "latitude", "longitude"))
   weather_full <- merge(weather_full, ag_ltn,  by = c("day", "latitude", "longitude"))
@@ -475,6 +509,10 @@ generateaWhereDataset <- function(lat
                   ,'wind.morningMax.amount') := NULL]
   
   #ADD LOGIC TO ENSURE THAT NOTHING IS IMPOSSIBLE VALUES
+  
+  if (verbose == TRUE) {
+    cat(paste0('    Process Complete \n'))
+  }
   
 
   return(weather_full)

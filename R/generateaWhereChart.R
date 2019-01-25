@@ -69,7 +69,7 @@ generateaWhereChart <- function(data
                                 ,doRoll = FALSE
                                 ,rolling_window = 30
                                 ,includeSTD = FALSE
-                                ,maingraphType = 'line') {
+                                ,mainGraphType = 'line') {
     
     #We are using a list consturct to hold all variables so we can loop over its length
     temp_variable   <- copy(variable)
