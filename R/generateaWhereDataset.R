@@ -454,7 +454,7 @@ generateaWhereDataset <- function(lat
                                                    ,'ltn.temperatures.max.average'
                                                    ,'ltn.temperatures.max.stdDev'
                                                    ,'ltn.temperatures.min.average'
-                                                   ,'ltn.temperatures.min.stddev'
+                                                   ,'ltn.temperatures.min.stdDev'
                                                    ,'ltn.relativeHumidity.min.average'
                                                    ,'ltn.relativeHumidity.min.stdDev'
                                                    ,'ltn.relativeHumidity.max.average'
