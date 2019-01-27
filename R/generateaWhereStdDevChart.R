@@ -53,7 +53,7 @@ generateaWhereStdDevChart <- function(data
                                       ,title = NULL
                                       ,e_precip = FALSE
                                       ,e_threshold = 35
-                                      ,doRoll = TRUE
+                                      ,doRoll = FALSE
                                       ,rolling_window = 30) {
   
   return(generateaWhereChart(data
