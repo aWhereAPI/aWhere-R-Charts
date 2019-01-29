@@ -40,7 +40,9 @@
 #' @param - rolling_window: numeric value for the number of days to use in rolling 
 #'             average calculations.  Default value is 30. (optional)
 #' @param - includeSTD: whether to plot the standard deviation as a ribbon around the LTN value of the main variable. (optional)
-#' @param - maingraphType Which type of graph to make for the main plot.  Valid values are "line" and "bar" (optional)
+#' @param - maingraphType: Which type of graph to make for the main plot.  Valid values are "line" and "bar" (optional)
+#' @param - daysToAggregateOver: Used to temporally aggregate data.  Unit is in days.
+#'                               This is done based on the startdate of the dataset, not a calendar week (otpional)
 #'
 #' @import tidyr
 #' @import dplyr
@@ -69,8 +71,9 @@ generateaWhereChart <- function(data
                                 ,doRoll = FALSE
                                 ,rolling_window = 30
                                 ,includeSTD = FALSE
-                                ,mainGraphType = 'line') {
-    
+                                ,mainGraphType = 'line'
+                                ,daysToAggregateOver = NULL) {
+  
     #We are using a list consturct to hold all variables so we can loop over its length
     temp_variable   <- copy(variable)
     variable        <- list()
@@ -81,6 +84,10 @@ generateaWhereChart <- function(data
     chart_data      <- list()
     chart_data_long <- list()
     scalingFactor   <- list()
+    colorScheme     <- list()
+    
+    
+    dataToUse <- copy(data)  
     
     variable[[1]] <- copy(temp_variable)
     variable.orig[[1]] <- copy(variable[[1]])
@@ -88,6 +95,76 @@ generateaWhereChart <- function(data
     if (is.null(variable_rightAxis) == FALSE) {
       variable[[2]] <- copy(variable_rightAxis)
       variable.orig[[2]] <- copy(variable_rightAxis)
+    }
+    
+    if (!is.null(daysToAggregateOver)) {
+    
+      typesOfColumns <- c('.amount','.average','.stdDev')
+      
+      variablesToProcess <- unique(gsub(pattern = paste0(typesOfColumns,collapse = '|')
+                                        ,replacement = ''
+                                        ,x = colnames(dataToUse)))
+      
+      variablesToProcess <- setdiff(variablesToProcess
+                                    ,c('latitude','longitude','date','day'))
+      
+      if('wind' %in% variablesToProcess) {
+        variablesToProcess <- setdiff(variablesToProcess,'wind')
+        variablesToProcess <- c(variablesToProcess,'wind.average','wind.dayMax')
+      }
+      
+      #The logic here is that the accumulated columns are already calculated for
+      #temporally subsetting and nothing needs to be done.  For variables that are
+      #logically summed over time, do that for the .amount and .average columns
+      #but the .stdDev column should have the mean taken.  For all other columns
+      #take the mean
+      for (x in 1:length(variablesToProcess)) {
+        for (y in 1:length(typesOfColumns)) {
+          
+          currentColumn <- paste0(variablesToProcess[x],typesOfColumns[y])
+          
+          if (grepl(pattern = 'accumulated'
+                    ,x = currentColumn
+                    ,fixed = TRUE) == TRUE) {
+          
+            eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := ',currentColumn,']')))
+              
+          } else if ((grepl(pattern = 'gdd|pet|ppet|precipitation'
+                           ,x = currentColumn
+                           ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
+            eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
+                                                                                                   ,width = daysToAggregateOver 
+                                                                                                   ,align = "right"
+                                                                                                   ,FUN = sum
+                                                                                                   ,na.rm = TRUE
+                                                                                                   ,fill = NA
+                                                                                                   ,partial = TRUE)]')))
+          } else {
+            eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
+                                                                                                   ,width = daysToAggregateOver 
+                                                                                                   ,align = "right"
+                                                                                                   ,FUN = mean
+                                                                                                   ,na.rm = TRUE
+                                                                                                   ,fill = NA
+                                                                                                   ,partial = TRUE)]')))
+          }
+        }
+      }
+      
+      dataToUse <- dataToUse[seq(from = 1
+                            ,to = nrow(dataToUse)
+                            ,by = daysToAggregateOver),]
+      
+      dataToUse[,unique(as.data.table(expand.grid(variablesToProcess
+                                       ,typesOfColumns))[,paste0(Var1,Var2)]) := NULL]
+      
+      
+      setnames(dataToUse
+               ,colnames(dataToUse)
+               ,gsub(pattern = '.new'
+                    ,replacement = ''
+                    ,x = colnames(temp)
+                    ,fixed = TRUE))
     }
     
     for (x in 1:length(variable)) {
@@ -132,15 +209,11 @@ generateaWhereChart <- function(data
       #because we are going to change the datastructure and it is a data.table we
       #will explicitly copy what is passed in so it doesn't violate user's scoping
       #expectations 
-      if (e_precip == FALSE) {
-        dataToUse <- data
-        
-      } else if (grepl(pattern = 'precipitation'
+      if (grepl(pattern = 'precipitation'
                        ,x = variable[[x]]
                        ,ignore.case = TRUE) | grepl(pattern = 'Ppet'
                                                     ,x = variable[[x]]
                                                     ,ignore.case = TRUE)) {
-        dataToUse <- copy(data)
         
         
         #if e_precip is set to true, bring in daily precip data and calculate accumulated
@@ -158,8 +231,23 @@ generateaWhereChart <- function(data
         varsToChart[[x]] <- c(varsToChart[[x]],paste0(variable[[x]],'.amount.effective'))
         variableNames[[x]] <- c(variableNames[[x]], 'EffectiveCurrent')
       }
+    
+      if (all(dataToUse[,precipitation.amount == precipitation.amount.effective]) == TRUE & x == 1) {
+        warning('The chosen setting for effective precipitation did not alter figure.  Disabling the use of effective precipitation for ',variable[[x]],'\n')
+        
+        varsToChart[[x]] <- grep(pattern = 'effective'
+                                 ,x = varsToChart[[x]]
+                                 ,ignore.case = TRUE
+                                 ,value = TRUE
+                                 ,invert = TRUE)
+        
+        variableNames[[x]] <- grep(pattern = 'effective'
+                                   ,x = variableNames[[x]]
+                                   ,ignore.case = TRUE
+                                   ,value = TRUE
+                                   ,invert = TRUE)
+      }
       
-      #PUT IN TEMPORAL AGGREGATIONS HERE
       
       ##set ylabel
       if (grepl(pattern = 'Gdd'
@@ -209,7 +297,8 @@ generateaWhereChart <- function(data
                                         ,LTN - LTNstddev)]
       
       if (grepl(pattern = 'Gdd|PPet|Pet|precipitation|relativeHumidity|solar|wind'
-                ,x = variable[[x]])) {
+                ,x = variable[[x]]
+                ,ignore.case = TRUE)) {
         chart_data[[x]][ymin < 0, ymin := 0]
       }
       
@@ -262,13 +351,24 @@ generateaWhereChart <- function(data
                                                ,fill = NA)]
       }
       
-      #Add identifying variable information to variable names
-      variableNames[[x]][-1] <- paste0(variableNames[[x]][-1],'-',variable[[x]])
+      #If EffectiveCurrent is the same as non adjusted slightly increase so both lines show on graph
+      if ((any(grepl(pattern = 'EffectiveCurrent'
+                ,x = colnames(chart_data[[x]])
+                ,fixed = TRUE)) & mainGraphType == 'line') == TRUE) {
+        if (all(chart_data[[x]][,Current == EffectiveCurrent]) == TRUE) {
+          chart_data[[x]][,EffectiveCurrent := EffectiveCurrent - .1]
+        }
+      }
       
-      setnames(chart_data[[x]]
-               ,setdiff(colnames(chart_data[[x]])[-1],c('ymin','ymax'))
-               ,paste0(setdiff(colnames(chart_data[[x]])[-1],c('ymin','ymax')),'-',variable[[x]]))
-      
+      if (length(variable) > 1) {
+        #Add identifying variable information to variable names
+        variableNames[[x]][-1] <- paste0(variableNames[[x]][-1],'-',variable[[x]])
+        
+        setnames(chart_data[[x]]
+                 ,setdiff(colnames(chart_data[[x]])[-1],c('ymin','ymax'))
+                 ,paste0(setdiff(colnames(chart_data[[x]])[-1],c('ymin','ymax')),'-',variable[[x]]))
+      }
+     
       #convert character date column to Date
       chart_data[[x]][,date :=as.Date(date)]
       
@@ -289,7 +389,12 @@ generateaWhereChart <- function(data
     
     #if title is not given by user, set it to date range + variable
     if (is.null(title)) {
-      title <- paste0(paste0(variable.orig,collapse = ' & '), " from ", min(dataToUse$date), " to ", max(dataToUse$date))
+      title <- paste0(paste0(variable.orig,collapse = ' & '), " from ", min(dataToUse$date), " to ", max(dataToUse$date),'\n')
+      
+      if (!is.null(daysToAggregateOver)) {
+        title <- c(title,paste0(daysToAggregateOver,' Day Aggregation'))
+      }
+      
     }
     
     #Because of how ggplot functions, we need to calculate the scaling factor between the two axis
@@ -302,6 +407,49 @@ generateaWhereChart <- function(data
       }
     }
     
+    #############################################################################
+    #set color scale based on # of vars to chart
+    colorScheme[[1]] <- data.table(variable = c('Current'
+                                                ,'EffectiveCurrent'
+                                                ,'LTN')
+                                   ,color = c("#1F83B4"
+                                              ,"#18A188"
+                                              ,"#FF810E"))
+    
+    if (length(chart_data_long) > 1) {
+      colorScheme[[2]] <- data.table(variable = c('Current'
+                                                  ,'EffectiveCurrent'
+                                                  ,'LTN')
+                                     ,color = c("#D077ED"
+                                                ,"#D8A5E8"
+                                                ,"#6DE38C"))
+    }
+
+
+    for (x in 1:length(chart_data_long)) {
+      currentVars <- unique(chart_data_long[[x]][,Variable])
+      
+      currentVars.split <- strsplit(x = currentVars
+                                   ,split = '-'
+                                   ,fixed = TRUE)
+      
+      currentVars.split = unlist(lapply(currentVars.split, function(l) l[[1]]))
+      currentVars.dt <- data.table(currentVars,currentVars.split)
+      
+      colorScheme[[x]] <- merge(colorScheme[[x]]
+                                ,currentVars.dt
+                                ,by.x = 'variable'
+                                ,by.y = 'currentVars.split')
+    }
+    
+    colorScheme <- rbindlist(colorScheme)
+    
+    colorScheme.string <- paste(colorScheme[,paste0('\"',currentVars,'\" = \"', color,'\"')],collapse = ',\n')
+    
+    eval(parse(text = paste0('colorScaleToUse <- scale_color_manual(values = c(',colorScheme.string,'))')))
+    eval(parse(text = paste0('colorFillToUse  <- scale_fill_manual(values = c(',colorScheme.string,'))')))
+
+    ############################################################################                                                        
     
     #make chart based on appropriate graph type
 
@@ -312,22 +460,34 @@ generateaWhereChart <- function(data
                ,na.rm = TRUE) 
       #include SD info for main variable
       if (includeSTD == TRUE) {
+        if (length(variable) > 1) {
+          SD_label <- paste0('SD of LTN-',variable[[1]])
+        } else {
+          SD_label <- paste0('SD of LTN')
+        }
+        
+        
         chart <- 
           chart + 
           geom_ribbon(aes(ymin = ymin
                           ,ymax = ymax
-                          ,fill = paste0('SD of ',variable[[1]]))
+                          ,fill = SD_label)
                       ,alpha = 0.3
                       ,linetype = "blank") +
-          scale_fill_manual("",values="grey12")
+          scale_fill_manual(values = '#FF810E')
+      #    guides(fill=FALSE) #activate this to turn off this in the legend
       }
-      
+    
       #plot actual lines on top
       chart <- 
         chart + 
         geom_line(aes(y = measure
                       ,colour = Variable)
-                  ,size = 1.5)
+                  ,size = 1.5) +
+        guides(colour = guide_legend(nrow = length(chart_data_long)
+                                     ,byrow = FALSE))
+      
+      nRowsFill <- 1
     } else {
       chart <- 
         ggplot() +
@@ -335,16 +495,19 @@ generateaWhereChart <- function(data
                  aes(x = date
                      ,y = measure
                      ,fill = Variable)
-                 ,position = 'stack'
-                 ,alpha = 0.4
+                 ,position = 'dodge'
                  ,na.rm = TRUE) +
         geom_line(data = chart_data_long[[1]][grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
                   ,aes(x = date
                        ,y = measure
                        ,colour = Variable)
                   ,na.rm = TRUE
-                  ,size = 1) +
-        scale_colour_manual(values = c("#1F83B4", "#18A188", "#FF810E")) 
+                  ,size = 1.5) +
+        colorFillToUse + 
+        guides(fill = guide_legend(nrow= nRowsFill
+                                   ,byrow = FALSE))
+      
+      nRowsFill <- 2
     }
     
     #add in line charts for other variables
@@ -365,22 +528,22 @@ generateaWhereChart <- function(data
     #format figure
     chart <- 
       chart +
+      colorScaleToUse +
       theme_igray() + 
       theme(axis.text.x = element_text(angle = 45
                                        ,hjust = 1)) +
       theme(legend.position="bottom"
+            ,legend.box = 'horizontal'
             ,legend.direction="horizontal"
-            ,legend.title = element_blank()) +
-      labs(x="Date"
-           ,y = ylabel[[1]]) +
+            ,legend.title = element_blank()
+            ,legend.justification = 'center'
+            ,axis.title.x=element_blank()) +
+      labs(y = ylabel[[1]]) +
       #the next two lines may be commented out if the vertical current date line is not desired
       geom_vline(xintercept = as.numeric(Sys.Date())
                  ,linetype = "dashed") +
-      ggtitle(title) +
-      guides(colour = guide_legend(ncol = 2
-                                   ,byrow = FALSE)) +
-      guides(fill = guide_legend(ncol= 1
-                                ,byrow = FALSE))
+      ggtitle(title)
+
     
     
     
