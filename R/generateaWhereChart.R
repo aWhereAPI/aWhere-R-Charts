@@ -392,7 +392,7 @@ generateaWhereChart <- function(data
       title <- paste0(paste0(variable.orig,collapse = ' & '), " from ", min(dataToUse$date), " to ", max(dataToUse$date),'\n')
       
       if (!is.null(daysToAggregateOver)) {
-        title <- c(title,paste0(daysToAggregateOver,' Day Aggregation'))
+        title <- paste0(title,paste0(daysToAggregateOver,' Day Aggregation\n'))
       }
       
     }

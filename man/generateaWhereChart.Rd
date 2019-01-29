@@ -6,7 +6,8 @@
 \usage{
 generateaWhereChart(data, variable, variable_rightAxis = NULL,
   title = NULL, e_precip = FALSE, e_threshold = 35, doRoll = FALSE,
-  rolling_window = 30, includeSTD = FALSE, maingraphType = "line")
+  rolling_window = 30, includeSTD = FALSE, mainGraphType = "line",
+  daysToAggregateOver = NULL)
 }
 \arguments{
 \item{-}{data: data frame in which variables are named according to the schema output by generateaWhereChart.R (required)}
@@ -36,7 +37,10 @@ average calculations.  Default value is 30. (optional)}
 
 \item{-}{includeSTD: whether to plot the standard deviation as a ribbon around the LTN value of the main variable. (optional)}
 
-\item{-}{maingraphType Which type of graph to make for the main plot.  Valid values are "line" and "bar" (optional)}
+\item{-}{maingraphType: Which type of graph to make for the main plot.  Valid values are "line" and "bar" (optional)}
+
+\item{-}{daysToAggregateOver: Used to temporally aggregate data.  Unit is in days.
+This is done based on the startdate of the dataset, not a calendar week (otpional)}
 }
 \value{
 plot object

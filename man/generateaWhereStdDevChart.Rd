@@ -5,7 +5,7 @@
 \title{generateaWhereStdDevChart}
 \usage{
 generateaWhereStdDevChart(data, variable, title = NULL,
-  e_precip = FALSE, e_threshold = 35, doRoll = TRUE,
+  e_precip = FALSE, e_threshold = 35, doRoll = FALSE,
   rolling_window = 30)
 }
 \arguments{
