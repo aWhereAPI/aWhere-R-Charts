@@ -92,6 +92,9 @@ generateaWhereChart <- function(data
     #expectations 
     dataToUse <- copy(data)  
     
+    #WHat to call the SD entry in the legend if displayed
+    SD_label <- paste0('SD of LTN')
+    
     variable[[1]] <- copy(temp_variable)
     variable.orig[[1]] <- copy(variable[[1]])
     
@@ -212,11 +215,12 @@ generateaWhereChart <- function(data
       }
       
 
-      if (grepl(pattern = 'precipitation'
+      #if the variable to be plotted is relevant and if the user wants to use effective precipitation, calculate new values
+      if ((grepl(pattern = 'precipitation'
                        ,x = variable[[x]]
                        ,ignore.case = TRUE) | grepl(pattern = 'Ppet'
                                                     ,x = variable[[x]]
-                                                    ,ignore.case = TRUE)) {
+                                                    ,ignore.case = TRUE)) & e_precip == TRUE) {
         
         
         #if e_precip is set to true, bring in daily precip data and calculate accumulated
@@ -302,6 +306,7 @@ generateaWhereChart <- function(data
                         ,'ymin'):= list(LTN + LTNstddev
                                         ,LTN - LTNstddev)]
       
+      #for these variables, the y axis should not below zero
       if (grepl(pattern = 'Gdd|PPet|Pet|precipitation|relativeHumidity|solar|wind'
                 ,x = variable[[x]]
                 ,ignore.case = TRUE)) {
@@ -400,7 +405,6 @@ generateaWhereChart <- function(data
       if (!is.null(daysToAggregateOver)) {
         title <- paste0(title,paste0(daysToAggregateOver,' Day Aggregation\n'))
       }
-      
     }
     
     #Because of how ggplot functions, we need to calculate the scaling factor between the two axis
@@ -419,9 +423,11 @@ generateaWhereChart <- function(data
     #variable
     colorScheme[[1]] <- data.table(variable = c('Current'
                                                 ,'EffectiveCurrent'
-                                                ,'LTN')
+                                                ,'LTN'
+                                                ,SD_label)
                                    ,color = c("#1F83B4"
                                               ,"#18A188"
+                                              ,"#FF810E"
                                               ,"#FF810E"))
     
     if (length(chart_data_long) > 1) {
@@ -442,6 +448,13 @@ generateaWhereChart <- function(data
                                    ,fixed = TRUE)
       
       currentVars.split = unlist(lapply(currentVars.split, function(l) l[[1]]))
+      
+      if (includeSTD == TRUE & x ==1)  {
+        currentVars <- c(currentVars,SD_label) 
+        currentVars.split <- c(currentVars.split,SD_label)
+      }
+      
+      
       currentVars.dt <- data.table(currentVars,currentVars.split)
       
       colorScheme[[x]] <- merge(colorScheme[[x]]
@@ -466,25 +479,6 @@ generateaWhereChart <- function(data
         ggplot(data = chart_data_long[[1]]
                ,aes(x = date)
                ,na.rm = TRUE) 
-      #include SD info for main variable
-      if (includeSTD == TRUE) {
-        if (length(variable) > 1) {
-          SD_label <- paste0('SD of LTN-',variable[[1]])
-        } else {
-          SD_label <- paste0('SD of LTN')
-        }
-        
-        
-        chart <- 
-          chart + 
-          geom_ribbon(aes(ymin = ymin
-                          ,ymax = ymax
-                          ,fill = SD_label)
-                      ,alpha = 0.3
-                      ,linetype = "blank") +
-          scale_fill_manual(values = '#FF810E') +
-          guides(fill=FALSE) #activate this to turn off this in the legend
-      }
     
       #plot actual lines on top
       chart <- 
@@ -516,6 +510,20 @@ generateaWhereChart <- function(data
                                    ,byrow = FALSE))
       
       nRowsFill <- 2
+    }
+    
+    #include SD info for main variable
+    if (includeSTD == TRUE) {
+      chart <- 
+        chart + 
+        geom_ribbon(data = chart_data_long[[1]]
+                    ,aes(x = date
+                        ,ymin = ymin
+                        ,ymax = ymax
+                        ,fill = SD_label)
+                    ,alpha = 0.3
+                    ,linetype = "blank") +
+        guides(fill=FALSE) #activate this to turn off this in the legend
     }
     
     #add in line charts for other variables
