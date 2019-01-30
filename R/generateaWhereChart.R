@@ -87,6 +87,9 @@ generateaWhereChart <- function(data
     colorScheme     <- list()
     
     
+    #because we are going to change the datastructure and it is a data.table we
+    #will explicitly copy what is passed in so it doesn't violate user's scoping
+    #expectations 
     dataToUse <- copy(data)  
     
     variable[[1]] <- copy(temp_variable)
@@ -151,14 +154,15 @@ generateaWhereChart <- function(data
         }
       }
       
+      #take every Nth row
       dataToUse <- dataToUse[seq(from = 1
-                            ,to = nrow(dataToUse)
-                            ,by = daysToAggregateOver),]
+                                ,to = nrow(dataToUse)
+                                ,by = daysToAggregateOver),]
       
+      #remove the previous variables
       dataToUse[,unique(as.data.table(expand.grid(variablesToProcess
                                        ,typesOfColumns))[,paste0(Var1,Var2)]) := NULL]
-      
-      
+      #rename columns to previous names
       setnames(dataToUse
                ,colnames(dataToUse)
                ,gsub(pattern = '.new'
@@ -167,6 +171,7 @@ generateaWhereChart <- function(data
                     ,fixed = TRUE))
     }
     
+    #for each variable to be plotted, loop through to create data structures for visualization
     for (x in 1:length(variable)) {
       
       #rename variable to match appropriate column in data
@@ -206,9 +211,7 @@ generateaWhereChart <- function(data
                                 ,"LTNstddev")
       }
       
-      #because we are going to change the datastructure and it is a data.table we
-      #will explicitly copy what is passed in so it doesn't violate user's scoping
-      #expectations 
+
       if (grepl(pattern = 'precipitation'
                        ,x = variable[[x]]
                        ,ignore.case = TRUE) | grepl(pattern = 'Ppet'
@@ -232,22 +235,25 @@ generateaWhereChart <- function(data
         variableNames[[x]] <- c(variableNames[[x]], 'EffectiveCurrent')
       }
     
-      if (all(dataToUse[,precipitation.amount == precipitation.amount.effective]) == TRUE & x == 1) {
-        warning('The chosen setting for effective precipitation did not alter figure.  Disabling the use of effective precipitation for ',variable[[x]],'\n')
-        
-        varsToChart[[x]] <- grep(pattern = 'effective'
-                                 ,x = varsToChart[[x]]
-                                 ,ignore.case = TRUE
-                                 ,value = TRUE
-                                 ,invert = TRUE)
-        
-        variableNames[[x]] <- grep(pattern = 'effective'
-                                   ,x = variableNames[[x]]
+      if (any(grepl(pattern = 'precipitation.amount.effective'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == TRUE) {
+        if (all(dataToUse[,precipitation.amount == precipitation.amount.effective]) == TRUE & x == 1) {
+          warning('The chosen setting for effective precipitation did not alter figure.  Disabling the use of effective precipitation for ',variable[[x]],'\n')
+          
+          varsToChart[[x]] <- grep(pattern = 'effective'
+                                   ,x = varsToChart[[x]]
                                    ,ignore.case = TRUE
                                    ,value = TRUE
                                    ,invert = TRUE)
+          
+          variableNames[[x]] <- grep(pattern = 'effective'
+                                     ,x = variableNames[[x]]
+                                     ,ignore.case = TRUE
+                                     ,value = TRUE
+                                     ,invert = TRUE)
+        }
       }
-      
       
       ##set ylabel
       if (grepl(pattern = 'Gdd'
@@ -408,7 +414,9 @@ generateaWhereChart <- function(data
     }
     
     #############################################################################
-    #set color scale based on # of vars to chart
+    #set color scale based on # of vars to chart. We are going to use a named
+    #vector so that the correct color is always associated with the correct
+    #variable
     colorScheme[[1]] <- data.table(variable = c('Current'
                                                 ,'EffectiveCurrent'
                                                 ,'LTN')
