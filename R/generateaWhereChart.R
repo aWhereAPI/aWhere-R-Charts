@@ -110,7 +110,7 @@ generateaWhereChart <- function(data
       
       if('wind' %in% variablesToProcess) {
         variablesToProcess <- setdiff(variablesToProcess,'wind')
-        variablesToProcess <- c(variablesToProcess,'wind.average','wind.dayMax')
+        variablesToProcess <- c(variablesToProcess,'wind.average')
       }
       
       #The logic here is that the accumulated columns are already calculated for
