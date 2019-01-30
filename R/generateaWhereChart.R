@@ -474,8 +474,8 @@ generateaWhereChart <- function(data
                           ,fill = SD_label)
                       ,alpha = 0.3
                       ,linetype = "blank") +
-          scale_fill_manual(values = '#FF810E')
-      #    guides(fill=FALSE) #activate this to turn off this in the legend
+          scale_fill_manual(values = '#FF810E') +
+          guides(fill=FALSE) #activate this to turn off this in the legend
       }
     
       #plot actual lines on top
