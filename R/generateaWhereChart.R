@@ -562,8 +562,8 @@ generateaWhereChart <- function(data
       geom_vline(xintercept = as.numeric(Sys.Date())
                  ,linetype = "dashed") +
       ggtitle(title) + + 
-      guides(fill = guide_legend(nrow= nRowsFill
-                                 ,byrow = FALSE))
+      #guides(fill = guide_legend(nrow= nRowsFill
+      #                           ,byrow = FALSE))
     
     return(chart)
 }
