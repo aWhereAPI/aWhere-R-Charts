@@ -84,6 +84,7 @@ generateaWhereChart <- function(data
     chart_data      <- list()
     chart_data_long <- list()
     scalingFactor   <- list()
+    offsetFactor    <- list()
     colorScheme     <- list()
     
     
@@ -170,7 +171,7 @@ generateaWhereChart <- function(data
                ,colnames(dataToUse)
                ,gsub(pattern = '.new'
                     ,replacement = ''
-                    ,x = colnames(temp)
+                    ,x = colnames(dataToUse)
                     ,fixed = TRUE))
     }
     
@@ -411,9 +412,12 @@ generateaWhereChart <- function(data
     for (x in 1:length(chart_data_long)) {
       if (x == 1) {
         rangeToUse <- diff(chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])
+        offsetFactor[[x]] <- 0
         scalingFactor[[x]] <- 1
       } else {
-        scalingFactor[[x]] <- diff(chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])/rangeToUse
+        #offsetFactor[[x]] <- chart_data_long[[x]][,min(measure)]
+        #scalingFactor[[x]] <- (diff(chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])/2)/rangeToUse
+        scalingFactor[[x]] <- chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(1))]/rangeToUse
       }
     }
     
