@@ -509,11 +509,10 @@ generateaWhereChart <- function(data
                        ,colour = Variable)
                   ,na.rm = TRUE
                   ,size = 1.5) +
-        colorFillToUse + 
-        guides(fill = guide_legend(nrow= nRowsFill
-                                   ,byrow = FALSE))
+        colorFillToUse
       
       nRowsFill <- 2
+      
     }
     
     #include SD info for main variable
@@ -562,11 +561,9 @@ generateaWhereChart <- function(data
       #the next two lines may be commented out if the vertical current date line is not desired
       geom_vline(xintercept = as.numeric(Sys.Date())
                  ,linetype = "dashed") +
-      ggtitle(title)
-
-    
-    
-    
+      ggtitle(title) + + 
+      guides(fill = guide_legend(nrow= nRowsFill
+                                 ,byrow = FALSE))
     
     return(chart)
 }
