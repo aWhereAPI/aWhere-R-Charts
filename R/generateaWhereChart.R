@@ -49,6 +49,7 @@
 #' @import ggplot2
 #' @import ggthemes
 #' @import zoo
+#' @import data.table
 #'
 #' @return plot object
 #'
@@ -470,33 +471,35 @@ generateaWhereChart <- function(data
     colorScheme <- rbindlist(colorScheme)
     
     colorScheme.string <- paste(colorScheme[,paste0('\"',currentVars,'\" = \"', color,'\"')],collapse = ',\n')
+    colorBreaks.string <- paste(colorScheme[variable != SD_label,paste0('\"',currentVars,'\"')],collapse = ', ')
     
     eval(parse(text = paste0('colorScaleToUse <- scale_color_manual(values = c(',colorScheme.string,'))')))
-    eval(parse(text = paste0('colorFillToUse  <- scale_fill_manual(values = c(',colorScheme.string,'))')))
 
+    #Do not include the SD info for the fill in the legend
+    eval(parse(text = paste0('colorFillToUse  <- scale_fill_manual(values = c(',colorScheme.string,'),breaks = c(',colorBreaks.string,'))')))
+
+    
     ############################################################################                                                        
     
     #make chart based on appropriate graph type
-
-    if (mainGraphType == 'line') {
-      chart <- 
-        ggplot(data = chart_data_long[[1]]
-               ,aes(x = date)
-               ,na.rm = TRUE) 
+    chart <- 
+      ggplot(data = chart_data_long[[1]]
+             ,aes(x = date)
+             ,na.rm = TRUE) 
     
+    
+    if (mainGraphType == 'line') {
       #plot actual lines on top
       chart <- 
         chart + 
         geom_line(aes(y = measure
                       ,colour = Variable)
-                  ,size = 1.5) +
-        guides(colour = guide_legend(nrow = length(chart_data_long)
-                                     ,byrow = FALSE))
+                  ,size = 1.5) 
       
       nRowsFill <- 1
     } else {
       chart <- 
-        ggplot() +
+        chart +
         geom_col(data = chart_data_long[[1]][!grepl(pattern = 'LTN',x = Variable,fixed = TRUE)], 
                  aes(x = date
                      ,y = measure
@@ -508,8 +511,7 @@ generateaWhereChart <- function(data
                        ,y = measure
                        ,colour = Variable)
                   ,na.rm = TRUE
-                  ,size = 1.5) +
-        colorFillToUse
+                  ,size = 1.5)
       
       nRowsFill <- 2
       
@@ -525,8 +527,8 @@ generateaWhereChart <- function(data
                         ,ymax = ymax
                         ,fill = SD_label)
                     ,alpha = 0.3
-                    ,linetype = "blank") +
-        guides(fill=FALSE) #activate this to turn off this in the legend
+                    ,linetype = "blank") 
+        #guides(fill=FALSE) #activate this to turn off this in the legend
     }
     
     #add in line charts for other variables
@@ -548,6 +550,7 @@ generateaWhereChart <- function(data
     chart <- 
       chart +
       colorScaleToUse +
+      colorFillToUse +
       theme_igray() + 
       theme(axis.text.x = element_text(angle = 45
                                        ,hjust = 1)) +
@@ -561,9 +564,11 @@ generateaWhereChart <- function(data
       #the next two lines may be commented out if the vertical current date line is not desired
       geom_vline(xintercept = as.numeric(Sys.Date())
                  ,linetype = "dashed") +
-      ggtitle(title) + + 
-      #guides(fill = guide_legend(nrow= nRowsFill
-      #                           ,byrow = FALSE))
+      ggtitle(title) +
+      guides(colour = guide_legend(nrow = length(chart_data_long)
+                                   ,byrow = FALSE))
+      guides(fill = guide_legend(nrow= nRowsFill
+                                 ,byrow = FALSE))
     
     return(chart)
 }
