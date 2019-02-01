@@ -4,7 +4,8 @@
 \alias{generateaWhereDataset}
 \title{generateaWhereDataset}
 \usage{
-generateaWhereDataset(lat, lon, day_start, day_end, year_start, year_end)
+generateaWhereDataset(lat, lon, day_start, day_end, year_start, year_end,
+  verbose = TRUE)
 }
 \arguments{
 \item{-}{lat: numeric latitude point in decimal degrees (required)}
