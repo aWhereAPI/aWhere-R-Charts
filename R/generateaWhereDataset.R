@@ -99,9 +99,16 @@ generateaWhereDataset <- function(lat
                                     ,block_size = 24)
         
       }, error = function(e) {
-        repeatQuery <- TRUE
-        dateToTest <- dateToTest+1
-        return(list(repeatQuery,dateToTest))
+        if (grepl(pattern = 'This function can only access data from today onward'
+                  ,x = e
+                  ,fixed = TRUE)) {
+          
+          repeatQuery <- TRUE
+          dateToTest <- dateToTest+1
+          return(list(repeatQuery,dateToTest))
+        } else {
+          stop(e) #print the error message and stop code
+        }
       })
       #Because there is no explicit error object in the return, we will instead
       #test if the fxn returned a data.frame indicating the query worked

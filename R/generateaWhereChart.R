@@ -514,7 +514,6 @@ generateaWhereChart <- function(data
                   ,size = 1.5)
       
       nRowsFill <- 2
-      
     }
     
     #include SD info for main variable
@@ -528,7 +527,6 @@ generateaWhereChart <- function(data
                         ,fill = SD_label)
                     ,alpha = 0.3
                     ,linetype = "blank") 
-        #guides(fill=FALSE) #activate this to turn off this in the legend
     }
     
     #add in line charts for other variables
