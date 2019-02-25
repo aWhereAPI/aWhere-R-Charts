@@ -75,8 +75,7 @@ generateaWhereChart <- function(data
                                 ,mainGraphType = 'line'
                                 ,daysToAggregateOver = NULL) {
   
-    data <- data.table::as.data.table(data)
-  
+
     #We are using a list consturct to hold all variables so we can loop over its length
     temp_variable   <- copy(variable)
     variable        <- list()
@@ -94,7 +93,7 @@ generateaWhereChart <- function(data
     #because we are going to change the datastructure and it is a data.table we
     #will explicitly copy what is passed in so it doesn't violate user's scoping
     #expectations 
-    dataToUse <- copy(data)  
+    dataToUse <- data.table::as.data.table(copy(data))
     
     #WHat to call the SD entry in the legend if displayed
     SD_label <- paste0('SD of LTN')
