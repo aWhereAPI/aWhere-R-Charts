@@ -75,6 +75,8 @@ generateaWhereChart <- function(data
                                 ,mainGraphType = 'line'
                                 ,daysToAggregateOver = NULL) {
   
+    data <- data.table::as.data.table(data)
+  
     #We are using a list consturct to hold all variables so we can loop over its length
     temp_variable   <- copy(variable)
     variable        <- list()

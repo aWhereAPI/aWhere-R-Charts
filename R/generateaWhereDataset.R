@@ -221,6 +221,8 @@ generateaWhereDataset <- function(lat
                       ,obs.wind.average = 0)
     obs <- obs[0,]
   }
+  
+  setkey(obs,date)
 ###############################################################################
 #Get observed Agronomics data
 ##############################################################################
@@ -244,6 +246,8 @@ generateaWhereDataset <- function(lat
   setnames(ag
            ,setdiff(ag.names,colsNoChange)
            ,paste0('obs.',setdiff(ag.names,colsNoChange)))
+  
+  setkey(ag,date)
 
 ###############################################################################
 #Get LTN Weather data
@@ -269,6 +273,8 @@ generateaWhereDataset <- function(lat
            ,setdiff(obs_ltn.names,colsNoChange)
            ,paste0('ltn.',setdiff(obs_ltn.names,colsNoChange)))
   
+  setkey(obs_ltn,day)
+  
 ###############################################################################
 #Get LTN Agronomics data
 ##############################################################################
@@ -292,6 +298,8 @@ generateaWhereDataset <- function(lat
   setnames(ag_ltn
            ,setdiff(ag_ltn.names,colsNoChange)
            ,paste0('ltn.',setdiff(ag_ltn.names,colsNoChange)))
+  
+  setkey(ag_ltn,day)
 ###############################################################################
 #Get forecast data
 ##############################################################################
@@ -389,18 +397,20 @@ generateaWhereDataset <- function(lat
                  ,by = c('latitude','longitude','day'))
     ag <- merge(ag
                 ,obs
-                ,by = c('latitude','longitude','day'))
+                ,by = c('latitude','longitude','day','date'))
     
     ag[is.na(obs.gdd),        obs.gdd        := ltn.gdd.average]
     ag[is.na(obs.ppet),       obs.ppet       := ltn.ppet.average]
     ag[is.na(obs.pet.amount), obs.pet.amount := ltn.pet.average]
     
-    ag[,obs.accumulatedGdd                  := cumsum(gdd)]
-    ag[,obs.accumulatedPpet                 := cumsum(ppet)]
-    ag[,obs.accumulatedPrecipitation.amount := cumsum(precipitation.amount)]
-    ag[,obs.accumulatedPet.amount           := cumsum(pet.amount)]
+    ag[,obs.accumulatedGdd                  := cumsum(obs.gdd)]
+    ag[,obs.accumulatedPpet                 := cumsum(obs.ppet)]
+    ag[,obs.accumulatedPrecipitation.amount := cumsum(obs.precipitation.amount)]
+    ag[,obs.accumulatedPet.amount           := cumsum(obs.pet.amount)]
     
     ag <- ag[,ag.names,with = FALSE]
+    
+    setkey(ag,date)
   } 
   
 ###############################################################################
