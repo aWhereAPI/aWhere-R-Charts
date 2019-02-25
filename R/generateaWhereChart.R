@@ -75,6 +75,8 @@ generateaWhereChart <- function(data
                                 ,mainGraphType = 'line'
                                 ,daysToAggregateOver = NULL) {
   
+    data <- data.table::as.data.table(data)
+  
     #We are using a list consturct to hold all variables so we can loop over its length
     temp_variable   <- copy(variable)
     variable        <- list()
@@ -514,7 +516,6 @@ generateaWhereChart <- function(data
                   ,size = 1.5)
       
       nRowsFill <- 2
-      
     }
     
     #include SD info for main variable
@@ -528,7 +529,6 @@ generateaWhereChart <- function(data
                         ,fill = SD_label)
                     ,alpha = 0.3
                     ,linetype = "blank") 
-        #guides(fill=FALSE) #activate this to turn off this in the legend
     }
     
     #add in line charts for other variables
