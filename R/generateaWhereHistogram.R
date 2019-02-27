@@ -100,10 +100,12 @@ generateaWhereHistogram <- function(data
   } 
 
   #set x axis scale
-  xScale <- scale_x_continuous(breaks = seq(from = chart_data[,min(measure)] 
-                                            ,to = chart_data[,max(measure)]
-                                            ,by = floor((ceiling(chart_data[,max(measure)]) - 
-                                                                          floor(chart_data[,min(measure)]))/10)))
+  seqToUse <- seq(from = chart_data[,min(measure)] 
+                  ,to = chart_data[,max(measure)]
+                  ,by = round((chart_data[,max(measure)] - 
+                                 chart_data[,min(measure)])/10,2))
+  
+  xScale <- scale_x_continuous(breaks = seqToUse)
   
   #make chart
   chart <- ggplot() + 
