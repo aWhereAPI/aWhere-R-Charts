@@ -92,8 +92,8 @@ generateaWhereDataset <- function(lat
       
       temp <- tryCatch({
         
-        aWhereAPI::forecasts_latlng(lat
-                                    ,lon
+        aWhereAPI::forecasts_latlng(latitude = lat
+                                    ,longitude = lon
                                     ,day_start = as.character(dateToTest)
                                     ,day_end = as.character(dateToTest)
                                     ,block_size = 24)
