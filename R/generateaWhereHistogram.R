@@ -25,6 +25,7 @@
 #' @import zoo
 #' @import ggplot2
 #' @import ggthemes
+#' @import data.table
 #'
 #' @return plot object
 #'
@@ -46,6 +47,8 @@ generateaWhereHistogram <- function(data
                                     ,compare_var = NULL
                                     ,xlabel = NULL
                                     ,title = NULL) {
+  
+  data <- data.table::as.data.table(data.table::copy(data))
   
   #if title is not given by user, set it to date range + variable
   if (is.null(title)) {
@@ -82,11 +85,12 @@ generateaWhereHistogram <- function(data
 
 
   #set data format as long
-  chart_data <- tidyr::gather(chart_data, 
-                              key = Variable, 
-                              value = measure, 
-                              2:ncol(chart_data)) %>%
-    as.data.table(.)
+  chart_data <- 
+    tidyr::gather(chart_data, 
+                  key = Variable, 
+                  value = measure, 
+                  2:ncol(chart_data)) %>%
+    data.table::as.data.table(.)
 
   #set color scale based on # of vars to chart
   if(length(unique(chart_data$Variable)) == 2) {
