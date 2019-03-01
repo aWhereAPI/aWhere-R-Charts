@@ -365,6 +365,14 @@ generateaWhereChart <- function(data
                                                ,fill = NA)]
       }
       
+      #Choice of columns is arbitrary as they all have the same rolling window
+      if (nrow(chart_data[[x]][!is.na(Current),]) > 0) {
+        chart_data[[x]] <- chart_data[[x]][!is.na(Current),]
+        warning('Rolling Aggregation Performed; Truncating data to date range with complete data\n')
+      }
+      
+
+      
       #If EffectiveCurrent is the same as non adjusted slightly increase so both lines show on graph
       if ((any(grepl(pattern = 'EffectiveCurrent'
                 ,x = colnames(chart_data[[x]])

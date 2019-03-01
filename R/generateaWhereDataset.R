@@ -99,9 +99,8 @@ generateaWhereDataset <- function(lat
                                     ,block_size = 24)
         
       }, error = function(e) {
-        if (grepl(pattern = 'This function can only access data from today onward'
-                  ,x = e
-                  ,fixed = TRUE)) {
+        if (grepl(pattern = 'This function can only access data from today onward|The date you specified was in the past or too far in the future'
+                  ,x = e)) {
           
           repeatQuery <- TRUE
           dateToTest <- dateToTest+1
