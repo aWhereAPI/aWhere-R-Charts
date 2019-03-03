@@ -245,7 +245,8 @@ generateaWhereChart <- function(data
       if (any(grepl(pattern = 'precipitation.amount.effective'
                     ,x = colnames(dataToUse)
                     ,fixed = TRUE)) == TRUE) {
-        if (all(dataToUse[,precipitation.amount == precipitation.amount.effective]) == TRUE & x == 1) {
+        if (all(dataToUse[!is.na(precipitation.amount) & !is.na(precipitation.amount.effective)
+                          ,precipitation.amount == precipitation.amount.effective]) == TRUE & x == 1) {
           warning('The chosen setting for effective precipitation did not alter figure.  Disabling the use of effective precipitation for ',variable[[x]],'\n')
           
           varsToChart[[x]] <- grep(pattern = 'effective'

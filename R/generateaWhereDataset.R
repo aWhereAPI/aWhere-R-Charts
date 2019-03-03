@@ -119,7 +119,9 @@ generateaWhereDataset <- function(lat
       }
     }
     
-    if (dateToTest <= lubridate::ymd(day_start)) {
+    firstForecastDay <- dateToTest
+    
+    if (firstForecastDay <= lubridate::ymd(day_start)) {
       onlyForecastRequested <- TRUE
     } else {
       onlyForecastRequested <- FALSE
@@ -316,7 +318,7 @@ generateaWhereDataset <- function(lat
     
     forecast <- aWhereAPI::forecasts_latlng(lat
                                             ,lon
-                                            ,day_start = as.character(interim_day_end + 1)
+                                            ,day_start = as.character(firstForecastDay)
                                             ,day_end = day_end
                                             ,block_size = 24) %>%
       data.table::as.data.table(.) %>%
@@ -527,7 +529,7 @@ generateaWhereDataset <- function(lat
   #ADD LOGIC TO ENSURE THAT NOTHING IS IMPOSSIBLE VALUES
   
   if (verbose == TRUE) {
-    cat(paste0('    Process Complete \n'))
+    cat(paste0('    Process Complete \n\n'))
   }
   
 
