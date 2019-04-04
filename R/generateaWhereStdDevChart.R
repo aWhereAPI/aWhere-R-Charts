@@ -30,7 +30,8 @@
 #' @param - rolling_window: numeric value for the number of days to use in rolling 
 #'             average calculations, only applicable if the variable parameter is set to
 #'             "rollingavgppet". Default value is 30. (optional)
-#'
+#' @param - yAxisLimits: Used to set the limits of the y axis explicitly.  If used, must be a two element vector of the form 
+#'                       c(minValue, maxValue) (optional)
 #' @import tidyr
 #' @import dplyr
 #' @import ggplot2
@@ -54,7 +55,8 @@ generateaWhereStdDevChart <- function(data
                                       ,e_precip = FALSE
                                       ,e_threshold = 35
                                       ,doRoll = FALSE
-                                      ,rolling_window = 30) {
+                                      ,rolling_window = 30
+                                      ,yAxisLimits = NA) {
   
   return(generateaWhereChart(data
                             ,variable = variable
@@ -63,6 +65,7 @@ generateaWhereStdDevChart <- function(data
                             ,e_threshold = e_threshold
                             ,doRoll = doRoll
                             ,rolling_window = rolling_window
-                            ,includeSTD = TRUE))
+                            ,includeSTD = TRUE
+                            ,yAxisLimits = yAxisLimits))
   
   }

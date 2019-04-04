@@ -99,16 +99,63 @@ generateaWhereHistogram <- function(data
     colorScaleToUse <- colorFillToUse <- scale_colour_manual(values = c("#1696AC")) 
   } 
 
+  #Set the bin spacing
+
+  currentPrecision <- 0
+  stepSize <- 0
+  range <- 0
+  
+  while (range == 0) {
+    minValue.range <- floor(chart_data[,min(measure)]/(currentPrecision + 1)) * (currentPrecision + 1)
+    maxValue.range <- ceiling(chart_data[,max(measure)]/(currentPrecision + 1)) * (currentPrecision + 1)
+    
+    range <- maxValue.range - minValue.range
+    
+    if (range == 0) {
+      currentPrecision <- currentPrecision + 1
+    }
+  }
+    
+  while(stepSize == 0) {
+    
+    stepSize <- round(range/10,currentPrecision)
+    
+    if (stepSize == 0) {
+      currentPrecision <- currentPrecision + 1
+    } else if (stepSize < 1) {
+      break
+    } else if (stepSize < 4) {
+      break
+    } else if (stepSize < 5) {
+      stepSize <- 5
+    } else if (stepSize < 10) {
+      stepSize <- 10 
+    } else if (stepSize < 25) {
+      stepSize <- 25
+    } else if (stepSize < 50) {
+      stepSize <- 50
+    } else if (stepSize < 100) {
+      stepSize <- 100
+    } else if (stepSize < 250) {
+      stepSize <- 250
+    } else if (stepSize < 500) {
+      stepSize <- 500
+    } else if (stepSize < 1000) {
+      stepSize <- 1000
+    }
+  }
+    
+
   #set x axis scale
-  seqToUse <- seq(from = chart_data[,min(measure)] 
-                  ,to = chart_data[,max(measure)]
-                  ,by = round((chart_data[,max(measure)] - 
-                                 chart_data[,min(measure)])/10,2))
+  seqToUse <- seq(from = minValue.range 
+                  ,to = maxValue.range
+                  ,by = stepSize)
   
   xScale <- scale_x_continuous(breaks = seqToUse)
   
   #make chart
-  chart <- ggplot() + 
+  chart <- 
+    ggplot() + 
     theme_igray() + 
     geom_histogram(data = chart_data, 
                    aes(measure,
@@ -118,8 +165,9 @@ generateaWhereHistogram <- function(data
                    bins = 40,
                    alpha = 0.4) +
     xScale +
-    theme(legend.position="bottom", legend.direction="horizontal",
-           legend.title = element_blank()) +
+    theme(legend.position="bottom"
+          ,legend.direction="horizontal"
+          ,legend.title = element_blank()) +
     labs(x=xlabel, y = "Count of Locations") +
     ggtitle(title)
     

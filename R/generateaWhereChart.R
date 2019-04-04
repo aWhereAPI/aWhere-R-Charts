@@ -43,6 +43,9 @@
 #' @param - maingraphType: Which type of graph to make for the main plot.  Valid values are "line" and "bar" (optional)
 #' @param - daysToAggregateOver: Used to temporally aggregate data.  Unit is in days.
 #'                               This is done based on the startdate of the dataset, not a calendar week (otpional)
+#' @param - yAxisLimits: Used to set the limits of the y axis explicitly.  If used, must be a two element vector of the form 
+#'                       c(minValue, maxValue) (optional)
+#'
 #'
 #' @import tidyr
 #' @import dplyr
@@ -73,7 +76,8 @@ generateaWhereChart <- function(data
                                 ,rolling_window = 30
                                 ,includeSTD = FALSE
                                 ,mainGraphType = 'line'
-                                ,daysToAggregateOver = NULL) {
+                                ,daysToAggregateOver = NULL
+                                ,yAxisLimits = NA) {
   
 
     #We are using a list consturct to hold all variables so we can loop over its length
@@ -577,6 +581,12 @@ generateaWhereChart <- function(data
                                    ,byrow = FALSE))
       guides(fill = guide_legend(nrow= nRowsFill
                                  ,byrow = FALSE))
+      
+    if (any(is.na(yAxisLimits)) == FALSE) {
+      chart <- 
+        chart + 
+        coord_cartesian(ylim = yAxisLimits)
+    }
     
     return(chart)
 }
