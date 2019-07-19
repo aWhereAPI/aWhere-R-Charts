@@ -6,7 +6,7 @@
 \usage{
 generateaWhereStdDevChart(data, variable, title = NULL,
   e_precip = FALSE, e_threshold = 35, doRoll = FALSE,
-  rolling_window = 30)
+  rolling_window = 30, yAxisLimits = NA)
 }
 \arguments{
 \item{-}{data: data frame in which variables are named according to the aWhere API conventions (required)}
@@ -27,6 +27,9 @@ effective precipitation if e_precip is set to TRUE. (optional)}
 \item{-}{rolling_window: numeric value for the number of days to use in rolling 
 average calculations, only applicable if the variable parameter is set to
 "rollingavgppet". Default value is 30. (optional)}
+
+\item{-}{yAxisLimits: Used to set the limits of the y axis explicitly.  If used, must be a two element vector of the form 
+c(minValue, maxValue) (optional)}
 }
 \value{
 plot object
