@@ -295,7 +295,7 @@ generateaWhereChart <- function(data
       } else if (grepl(pattern = 'temperatures'
                        ,x = variable[[x]]
                        ,ignore.case = TRUE) == TRUE) {
-        ylabel[[x]] = 'Celcius'
+        ylabel[[x]] = 'Celsius'
       } else if (grepl(pattern = 'wind'
                        ,x = variable[[x]]
                        ,ignore.case = TRUE) == TRUE) {
