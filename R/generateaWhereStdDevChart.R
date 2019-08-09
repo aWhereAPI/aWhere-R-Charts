@@ -59,13 +59,13 @@ generateaWhereStdDevChart <- function(data
                                       ,yAxisLimits = NA) {
   
   return(generateaWhereChart(data
-                            ,variable = variable
-                            ,title = title
-                            ,e_precip = e_precip 
-                            ,e_threshold = e_threshold
-                            ,doRoll = doRoll
-                            ,rolling_window = rolling_window
-                            ,includeSTD = TRUE
-                            ,yAxisLimits = yAxisLimits))
+                             ,variable = variable
+                             ,title = title
+                             ,e_precip = e_precip 
+                             ,e_threshold = e_threshold
+                             ,doRoll = doRoll
+                             ,rolling_window = rolling_window
+                             ,includeSTD = TRUE
+                             ,yAxisLimits = yAxisLimits))
   
-  }
+}

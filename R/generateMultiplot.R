@@ -39,30 +39,29 @@ generateMultiplot <- function(..., title, fontsize = 12, cols = 2) {
   #Set up layout using the 'cols' argument
   #Number of rows is calculated as nplots/cols
   layout <- matrix(seq(1, cols * ceiling(nplots/cols)),
-                     ncol = cols, nrow = ceiling(nplots/cols))
+                   ncol = cols, nrow = ceiling(nplots/cols))
   
   #If for some reason the user only input 1 plot, print it
   if (nplots==1) {
     
     print(plots[[1]])
-  
+    
     #else, set up the multiplot  
   } else {
     plots <- lapply(plots, function(x) {
       x + theme(plot.title = element_text(size=fontsize))
     })
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout)+1, ncol(layout), heights = unit(c(1, 4, 4), "null"))))
-    grid.text(title, gp = gpar(fontsize= fontsize*2), vp = viewport(layout.pos.row = 1, layout.pos.col = 1:2, gp = gpar(fill="gray")))
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(layout = grid::grid.layout(nrow(layout) + 1, ncol(layout), heights = unit(c(1, 4, 4), "null"))))
+    grid::grid.text(title, gp = grid::gpar(fontsize = round(fontsize*1.5)), vp = grid::viewport(layout.pos.row = 1, layout.pos.col = 1:2, gp = grid::gpar(fill="gray")))
     
     # Make each plot, in the correct location
     for (i in 1:nplots) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
       
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row +1,
-                                      layout.pos.col = matchidx$col))
+      print(plots[[i]], vp = grid::viewport(layout.pos.row = matchidx$row +1,
+                                            layout.pos.col = matchidx$col))
     }
   }
 }
-
