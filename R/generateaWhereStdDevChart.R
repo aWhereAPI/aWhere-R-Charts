@@ -58,14 +58,15 @@ generateaWhereStdDevChart <- function(data
                                       ,rolling_window = 30
                                       ,yAxisLimits = NA) {
   
-  return(generateaWhereChart(data
-                            ,variable = variable
-                            ,title = title
-                            ,e_precip = e_precip 
-                            ,e_threshold = e_threshold
-                            ,doRoll = doRoll
-                            ,rolling_window = rolling_window
-                            ,includeSTD = TRUE
-                            ,yAxisLimits = yAxisLimits))
+  return(generateaWhereChart_testing(data
+                                     #generateaWhereChart(data
+                                     ,variable = variable
+                                     ,title = title
+                                     ,e_precip = e_precip 
+                                     ,e_threshold = e_threshold
+                                     ,doRoll = doRoll
+                                     ,rolling_window = rolling_window
+                                     ,includeSTD = TRUE
+                                     ,yAxisLimits = yAxisLimits))
   
-  }
+}

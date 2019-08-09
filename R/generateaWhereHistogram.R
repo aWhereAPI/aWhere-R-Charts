@@ -53,7 +53,7 @@ generateaWhereHistogram <- function(data
   #if title is not given by user, set it to date range + variable
   if (is.null(title)) {
     title <- paste0("Aggregated aWhere Data - ", variable)
-    }
+  }
   
   #set common names of columns and xlabel (if not specified)
   if (is.null(xlabel)) {
@@ -62,11 +62,11 @@ generateaWhereHistogram <- function(data
   
   #filter out relevant data
   variablesToInclude <- c('latitude'
-                        ,'longitude'
-                        ,variable)
+                          ,'longitude'
+                          ,variable)
   
   variableNames <- c("place", "Current")
-
+  
   if (compare == TRUE) {
     
     variablesToInclude <- c(variablesToInclude
@@ -82,8 +82,8 @@ generateaWhereHistogram <- function(data
   chart_data <- chart_data[, c('place',variablesToInclude[-c(1,2)]), with = FALSE]
   
   chart_data <- setNames(chart_data, variableNames)
-
-
+  
+  
   #set data format as long
   chart_data <- 
     tidyr::gather(chart_data, 
@@ -91,16 +91,18 @@ generateaWhereHistogram <- function(data
                   value = measure, 
                   2:ncol(chart_data)) %>%
     data.table::as.data.table(.)
-
+  
   #set color scale based on # of vars to chart
   if(length(unique(chart_data$Variable)) == 2) {
-    colorScaleToUse <- colorFillToUse <- scale_colour_manual(values = c("#1696AC", "#FF810E")) 
+    colorScaleToUse <- scale_colour_manual(values = c("#1696AC", "#FF810E")) 
+    colorFillToUse <- scale_fill_manual(values = c("#1696AC", "#FF810E")) 
   } else {
-    colorScaleToUse <- colorFillToUse <- scale_colour_manual(values = c("#1696AC")) 
+    colorScaleToUse <- scale_colour_manual(values = c("#1696AC")) 
+    colorFillToUse <- scale_fill_manual(values = c("#1696AC")) 
   } 
-
+  
   #Set the bin spacing
-
+  
   currentPrecision <- 0
   stepSize <- 0
   range <- 0
@@ -115,7 +117,7 @@ generateaWhereHistogram <- function(data
       currentPrecision <- currentPrecision + 1
     }
   }
-    
+  
   while(stepSize == 0) {
     
     stepSize <- round(range/10,currentPrecision)
@@ -144,8 +146,8 @@ generateaWhereHistogram <- function(data
       stepSize <- 1000
     }
   }
-    
-
+  
+  
   #set x axis scale
   seqToUse <- seq(from = minValue.range 
                   ,to = maxValue.range
@@ -153,10 +155,16 @@ generateaWhereHistogram <- function(data
   
   xScale <- scale_x_continuous(breaks = seqToUse)
   
+  # variables for title and label font sizes 
+  size_font_main_title <- 16
+  size_font_axis_titles <- 14
+  size_font_axis_labels <- 14
+  size_font_legend_entries <- 14
+  
   #make chart
   chart <- 
     ggplot() + 
-    theme_igray() + 
+    theme_bw() + 
     geom_histogram(data = chart_data, 
                    aes(measure,
                        col = Variable, 
@@ -167,9 +175,37 @@ generateaWhereHistogram <- function(data
     xScale +
     theme(legend.position="bottom"
           ,legend.direction="horizontal"
-          ,legend.title = element_blank()) +
-    labs(x=xlabel, y = "Count of Locations") +
-    ggtitle(title)
+          ,legend.title = element_blank()
+          
+          ,legend.spacing.x = unit(0.3,"cm")
+          
+          # x-axis labels
+          ,axis.text.x = element_text(color = "grey20", # font color 
+                                      size = size_font_axis_labels, # font size 
+                                      hjust = 1,        # horizontal adjustment
+                                      face = "plain")  # font type "plain", "bold" 
+          # y-axis labels 
+          ,axis.text.y = element_text(color = "grey20", 
+                                      size = size_font_axis_labels, 
+                                      face = "plain")
+          # y-axis title
+          ,axis.title.y = element_text(color = "grey20", 
+                                       size = size_font_axis_titles, 
+                                       face = "bold")
+          
+          # x-axis title
+          ,axis.title.x = element_text(color = "grey20", 
+                                       size = size_font_axis_titles, 
+                                       face = "bold")
+          
+          # legend text size
+          ,legend.text=element_text(size=size_font_legend_entries)) + 
     
+    labs(x=xlabel, y = "Count of Locations") +
+    colorScaleToUse + 
+    colorFillToUse + 
+    ggtitle(title) + 
+    theme(plot.title = element_text(size=size_font_main_title)) # main title size
+  
   return(chart)
 }
