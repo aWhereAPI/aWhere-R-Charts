@@ -517,12 +517,15 @@ generateaWhereChart <- function(data
   if (mainGraphType == 'line') {
     #plot actual lines on top
     chart <- 
-      chart + 
-      geom_line(aes(y = measure
-                    ,colour = Variable)
+      chart +
+      geom_ribbon(data = chart_data_long[[1]]
+                ,aes(ymin = measure
+                     ,ymax = measure
+                     ,fill = Variable
+                     ,colour = Variable)
                 ,size = line_width) 
     
-    nRowsFill <- 1
+    numFillsLegend <- chart_data_long[[1]][,length(unique(Variable))]
   } else {
     chart <- 
       chart +
@@ -532,22 +535,23 @@ generateaWhereChart <- function(data
                    ,fill = Variable)
                ,position = 'dodge'
                ,na.rm = TRUE) +
-      geom_line(data = chart_data_long[[1]][grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
-                ,aes(x = date
-                     ,y = measure
-                     ,colour = Variable)
-                ,na.rm = TRUE
-                ,size = line_width) + 
-      #DM NOTE: Demonstrating how we can make the SD entry appear in the "wrong" legend
-      #DM NOTE: If appears in legend should be 
-      geom_line(data = chart_data_long[[1]]
-                ,aes(x = date
-                     ,y = ymin
-                     ,colour = SD_label)
-                ,alpha = 0
-                ,linetype = "blank") 
+      #geom_line(data = chart_data_long[[1]][grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
+      #          ,aes(x = date
+      #               ,y = measure
+      #               ,colour = Variable)
+      #          ,na.rm = TRUE
+      #          ,size = line_width) 
+       geom_ribbon(data = chart_data_long[[1]][grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
+              ,aes(x = date
+                   ,ymin = measure
+                   ,ymax = measure
+                   ,colour = Variable
+                   ,fill = Variable)
+              ,na.rm = TRUE
+              ,size = line_width) 
     
-    nRowsFill <- 2
+    numFillsLegend <- chart_data_long[[1]][,length(unique(Variable))]
+      
   }
   
   #include SD info for main variable
@@ -561,6 +565,8 @@ generateaWhereChart <- function(data
                        ,fill = SD_label)
                   ,alpha = 0.3 # adjust transparency of SD DEV shading
                   ,linetype = "blank") 
+    
+    numFillsLegend <- numFillsLegend + 1
   }
   
   #add in line charts for other variables
@@ -569,15 +575,19 @@ generateaWhereChart <- function(data
     for (x in 2:length(chart_data_long)) {
       chart <-
         chart +
-        geom_line(data = chart_data_long[[x]]
+        geom_ribbon(data = chart_data_long[[x]]
                   ,aes(x = date
-                       ,y = measure/scalingFactor[[x]]
-                       ,colour = Variable)
+                       ,ymin = measure/scalingFactor[[x]]
+                       ,ymax = measure/scalingFactor[[x]]
+                       ,colour = Variable
+                       ,fill = Variable)
                   ,size = line_width
                   #,linetype = linetypes[x] # change line type for sunsequent variables
-        ) +
+                  ) +
         scale_y_continuous(sec.axis = sec_axis(~.*scalingFactor[[x]]
                                                ,name = ylabel[[x]])) 
+      
+      numFillsLegend <- numFillsLegend + chart_data_long[[x]][,length(unique(Variable))]
     }
   }
   
@@ -608,24 +618,28 @@ generateaWhereChart <- function(data
           axis.title.x=element_blank()) + 
     
     # format the legend 
-    theme(#legend.position = "bottom" # place legend at bottom of chart
-      legend.position="right" # place legend at right side of chart
-      #,legend.box = "horizontal"
-      ,legend.box = "vertical"
-      #,legend.direction= "horizontal"
-      ,legend.direction= "vertical"
-      ,legend.title = element_blank() # no legend title
-      ,legend.justification = "center"
-      ,legend.text=element_text(size=size_font_legend_entries)) +
+    theme(
+      # legend on RIGHT side of chart with items stacked vertically ---
+      #legend.position="right" # place legend at right side of chart
+      #,legend.box = "vertical"
+      #,legend.direction= "vertical"
+      
+      # legend on BOTTOM of chart with items stacked horizontally ---
+      legend.position = "bottom" # place legend at bottom of chart
+      ,legend.box = "horizontal"
+      ,legend.direction= "horizontal"
+      ,legend.title = element_blank()
+      ,legend.spacing.x = unit(.1, 'cm'))  +
+      
     
     # Reorder legend entries
     guides(
-      fill = guide_legend(ncol = 1
-                          ,bycol = TRUE
+      fill = guide_legend(ncol = numFillsLegend
                           ,order = 1), 
-      colour = guide_legend(ncol = 1
-                            ,bycol = TRUE
-                            ,order = 2)) + 
+      #colour = guide_legend(ncol =  numColorsLegend 
+      #                      ,order = 2)) + 
+      colour = FALSE) + 
+    
     
     # Original legend formatting 
     #guides(colour = guide_legend(nrow = length(chart_data_long),
@@ -643,8 +657,8 @@ generateaWhereChart <- function(data
     
     # main chart title 
     ggtitle(title) + # add  main title to the chart 
-    theme(plot.title = element_text(size=size_font_main_title)) + # main title font size  
-    theme(legend.spacing.y = unit(-0.18, "cm"))
+    theme(plot.title = element_text(size=size_font_main_title)) # main title font size  
+    #theme(legend.spacing.y = unit(-0.18, "cm"))
   
   
   
