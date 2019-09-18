@@ -99,9 +99,9 @@ generateaWhereDataset <- function(lat
                                     ,block_size = 24)
         
       }, error = function(e) {
-        if (grepl(pattern = 'This function can only access data from today onward|The date you specified was in the past or too far in the future'
+        
+        if (grepl(pattern = 'Use the GetWeatherObservationsHist function to request data from yesterday backwards'
                   ,x = e)) {
-          
           repeatQuery <- TRUE
           dateToTest <- dateToTest+1
           return(list(repeatQuery,dateToTest))
