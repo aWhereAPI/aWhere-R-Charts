@@ -101,7 +101,8 @@ generateaWhereDataset <- function(lat
       }, error = function(e) {
         
         if (grepl(pattern = 'Use the GetWeatherObservationsHist function to request data from yesterday backwards'
-                  ,x = e)) {
+                  ,x = e
+                  ,ignore.case = TRUE)) {
           repeatQuery <- TRUE
           dateToTest <- dateToTest+1
           return(list(repeatQuery,dateToTest))
