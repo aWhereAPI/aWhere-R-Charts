@@ -311,7 +311,8 @@ generateaWhereDataset <- function(lat
   #get the date range fo rthis call
   #
   
-  if (interim_day_end != day_end) {
+  if (firstForecastDay <= day_end) {
+  #if (interim_day_end != day_end) {
     
     if (verbose == TRUE) {
       cat(paste0('    Requested forecast weather data \n'))
@@ -349,7 +350,7 @@ generateaWhereDataset <- function(lat
   } else {
     forecast <- data.frame(latitude = 0
                       ,longitude = 0
-                      ,date = ymd(Sys.Date())
+                      ,date = lubridate::ymd(Sys.Date())
                       ,day = as.character(0)
                       ,forecast.temperatures.max = 0
                       ,forecast.temperatures.min = 0
