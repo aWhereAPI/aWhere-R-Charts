@@ -85,10 +85,12 @@ generateaWhereDataset <- function(lat
   } else {
     dateToTest <- Sys.Date()  - 2 #this is one extra day of testing than should be necessary
     
+    numTries <- 0
     repeatQuery <- TRUE
     while(repeatQuery == TRUE) {
   
       repeatQuery <- FALSE
+      numTries <- numTries + 1
       
       temp <- tryCatch({
         
@@ -118,6 +120,11 @@ generateaWhereDataset <- function(lat
         
        # rm(temp)
       }
+      
+      if (numTries > 5) {
+        stop('There is a problem with determining how to account for timezone differences\n
+             between the user and aWhere\'s API.  Please review your settings to make sure nothing is wrong')
+      }
     }
     
     firstForecastDay <- dateToTest
@@ -140,10 +147,12 @@ generateaWhereDataset <- function(lat
   } else {
     dateToTest <- Sys.Date() + 2 #this is one extra day of testing than should be necessary
     
+    numTries <- 0
     repeatQuery <- TRUE
     while(repeatQuery == TRUE) {
       repeatQuery <- FALSE
-
+      numTries <- numTries + 1
+      
       temp <- tryCatch({
                 aWhereAPI::daily_observed_latlng(lat
                                               ,lon
@@ -161,6 +170,10 @@ generateaWhereDataset <- function(lat
         dateToTest <- temp[[2]][1]
         
         rm(temp)
+      }
+      if (numTries > 5) {
+        stop('There is a problem with determining how to account for timezone differences\n
+             between the user and aWhere\'s API.  Please review your settings to make sure nothing is wrong')
       }
     }
     
