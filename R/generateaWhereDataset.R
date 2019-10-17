@@ -85,10 +85,12 @@ generateaWhereDataset <- function(lat
   } else {
     dateToTest <- Sys.Date()  - 2 #this is one extra day of testing than should be necessary
     
+    numTries <- 0
     repeatQuery <- TRUE
     while(repeatQuery == TRUE) {
   
       repeatQuery <- FALSE
+      numTries <- numTries + 1
       
       temp <- tryCatch({
         
@@ -100,7 +102,7 @@ generateaWhereDataset <- function(lat
         
       }, error = function(e) {
         
-        if (grepl(pattern = 'Use the GetWeatherObservationsHist function to request data from yesterday backwards'
+        if (grepl(pattern = 'Please use the observations API for past data.'
                   ,x = e
                   ,ignore.case = TRUE)) {
           repeatQuery <- TRUE
@@ -117,6 +119,11 @@ generateaWhereDataset <- function(lat
         dateToTest <- temp[[2]][1]
         
        # rm(temp)
+      }
+      
+      if (numTries > 5) {
+        stop('There is a problem with determining how to account for timezone differences\n
+             between the user and aWhere\'s API.  Please review your settings to make sure nothing is wrong')
       }
     }
     
@@ -140,10 +147,12 @@ generateaWhereDataset <- function(lat
   } else {
     dateToTest <- Sys.Date() + 2 #this is one extra day of testing than should be necessary
     
+    numTries <- 0
     repeatQuery <- TRUE
     while(repeatQuery == TRUE) {
       repeatQuery <- FALSE
-
+      numTries <- numTries + 1
+      
       temp <- tryCatch({
                 aWhereAPI::daily_observed_latlng(lat
                                               ,lon
@@ -161,6 +170,10 @@ generateaWhereDataset <- function(lat
         dateToTest <- temp[[2]][1]
         
         rm(temp)
+      }
+      if (numTries > 5) {
+        stop('There is a problem with determining how to account for timezone differences\n
+             between the user and aWhere\'s API.  Please review your settings to make sure nothing is wrong')
       }
     }
     
@@ -311,7 +324,8 @@ generateaWhereDataset <- function(lat
   #get the date range fo rthis call
   #
   
-  if (interim_day_end != day_end) {
+  if (firstForecastDay <= day_end) {
+  #if (interim_day_end != day_end) {
     
     if (verbose == TRUE) {
       cat(paste0('    Requested forecast weather data \n'))
@@ -349,7 +363,7 @@ generateaWhereDataset <- function(lat
   } else {
     forecast <- data.frame(latitude = 0
                       ,longitude = 0
-                      ,date = ymd(Sys.Date())
+                      ,date = lubridate::ymd(Sys.Date())
                       ,day = as.character(0)
                       ,forecast.temperatures.max = 0
                       ,forecast.temperatures.min = 0
