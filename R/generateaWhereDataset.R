@@ -438,18 +438,16 @@ generateaWhereDataset <- function(lat
     cat(paste0('    Combining together data\n'))
   }
   
-  weather_full <- merge(obs,          ag,      by = c("date", "day", "latitude", "longitude"), all = TRUE)
-  weather_full <- merge(weather_full, obs_ltn, by = c("day", "latitude", "longitude"))
-  weather_full <- merge(weather_full, ag_ltn,  by = c("day", "latitude", "longitude"))
+  weather_full <- merge(obs,          ag,       by = c("date", "day", "latitude", "longitude"), all = TRUE)
+  weather_full <- merge(weather_full, forecast, by = c("date", "day", "latitude", "longitude"), all = TRUE)
+  weather_full <- merge(weather_full, obs_ltn,  by = c("day", "latitude", "longitude"))
+  weather_full <- merge(weather_full, ag_ltn,   by = c("day", "latitude", "longitude"))
   
   setkey(weather_full,date)
   
-  weather_full.names <- colnames(weather_full)
+  weather_full.names <- unique(c(colnames(obs), colnames(ag), colnames(obs_ltn), colnames(ag_ltn)))
   
-  weather_full <- merge(weather_full
-                        ,forecast
-                        ,by = c("date", "day", "latitude", "longitude")
-                        ,all = TRUE)
+
   
   #This is meant to add the forecast data to the observed columns
   
