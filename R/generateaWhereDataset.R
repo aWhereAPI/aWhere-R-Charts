@@ -413,7 +413,7 @@ generateaWhereDataset <- function(lat
                  ,by = c('latitude','longitude','day'))
     ag <- merge(ag
                 ,obs
-                ,by = c('latitude','longitude','day','date'))
+                ,by = c('latitude','longitude','day','date'), all.x = TRUE)
     
     ag[is.na(obs.gdd),        obs.gdd        := ltn.gdd.average]
     ag[is.na(obs.ppet),       obs.ppet       := ltn.ppet.average]
