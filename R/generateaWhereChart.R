@@ -108,13 +108,13 @@ generateaWhereChart <- function(data
   #What to call the SD entry in the legend if displayed
   SD_label <- paste0('SD of LTN')
   
-  variable[[1]] <- copy(temp_variable)
-  variable.orig[[1]] <- copy(variable[[1]])
-  
+  variable <- as.list(copy(temp_variable))
+
   if (is.null(variable_rightAxis) == FALSE) {
-    variable[[2]] <- copy(variable_rightAxis)
-    variable.orig[[2]] <- copy(variable_rightAxis)
+    variable <- c(variable,as.list(copy(variable_rightAxis)))
   }
+  
+  variable.orig <- copy(variable)
   
   if (!is.null(daysToAggregateOver)) {
     
@@ -167,8 +167,8 @@ generateaWhereChart <- function(data
                                    ,fill = NA
                                    ,partial = TRUE)]')))
         }
-        }
-        }
+      }
+    }
     
     #take every Nth row
     dataToUse <- dataToUse[seq(from = 1
@@ -185,7 +185,7 @@ generateaWhereChart <- function(data
                    ,replacement = ''
                    ,x = colnames(dataToUse)
                    ,fixed = TRUE))
-        }
+  }
   
   #for each variable to be plotted, loop through to create data structures for visualization
   for (x in 1:length(variable)) {
@@ -382,8 +382,6 @@ generateaWhereChart <- function(data
       warning('Rolling Aggregation Performed; Truncating data to date range with complete data\n')
     }
     
-    
-    
     #If EffectiveCurrent is the same as non adjusted slightly increase so both lines show on graph
     if ((any(grepl(pattern = 'EffectiveCurrent'
                    ,x = colnames(chart_data[[x]])
@@ -406,10 +404,11 @@ generateaWhereChart <- function(data
     chart_data[[x]][,date :=as.Date(date)]
     
     #change data format from wide to long
-    chart_data_long[[x]] <- tidyr::gather(chart_data[[x]][,variableNames[[x]],with = FALSE] 
-                                          ,key = Variable 
-                                          ,value = measure 
-                                          ,2:ncol(chart_data[[x]][,variableNames[[x]],with = FALSE])) %>%
+    chart_data_long[[x]] <- 
+      tidyr::gather(chart_data[[x]][,variableNames[[x]],with = FALSE] 
+                      ,key = Variable 
+                      ,value = measure 
+                      ,2:ncol(chart_data[[x]][,variableNames[[x]],with = FALSE])) %>%
       as.data.table(.)
     
     
@@ -422,48 +421,72 @@ generateaWhereChart <- function(data
   
   #if title is not given by user, set it to date range + variable
   if (is.null(title)) {
-    title <- paste0(paste0(variable.orig,collapse = ' & '), " from ", min(dataToUse$date), " to ", max(dataToUse$date),'\n')
+    title <- paste0(paste0(variable.orig,collapse = ' & '), "\nfrom ", min(dataToUse$date), " to ", max(dataToUse$date),'\n')
     
     if (!is.null(daysToAggregateOver)) {
       title <- paste0(title,paste0(daysToAggregateOver,' Day Aggregation\n'))
     }
   }
   
+  ylabel_unique <- unique(unlist(ylabel))
+  
+  #Check to make sure we are not trying to plot more than two different types of units
+  if (length(ylabel_unique) > 2) {
+    stop('Trying to plot more variables than can be displayed with only two different types of units\n')
+  }
+  
   #Because of how ggplot functions, we need to calculate the scaling factor between the two axis
-  for (x in 1:length(chart_data_long)) {
+  for (x in 1:length(ylabel_unique)) {
+    currentIndices <- which(ylabel == ylabel_unique[x])
+    
     if (x == 1) {
-      rangeToUse <- diff(chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])
-      offsetFactor[[x]] <- 0
-      scalingFactor[[x]] <- 1
+      rangeToUse <- diff(rbindlist(chart_data_long[currentIndices])[,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])
+      offsetFactor[currentIndices] <- 0
+      scalingFactor[currentIndices] <- 1
     } else {
       #offsetFactor[[x]] <- chart_data_long[[x]][,min(measure)]
       #scalingFactor[[x]] <- (diff(chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])/2)/rangeToUse
-      scalingFactor[[x]] <- chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(1))]/rangeToUse
+      scalingFactor[currentIndices] <- rbindlist(chart_data_long[currentIndices])[,quantile(x = measure,na.rm = TRUE,probs = c(1))]/rangeToUse
     }
   }
   
   #############################################################################
   #set color scale based on # of vars to chart. 
-  colorScheme[[1]] <- data.table(variable = c('Current'
-                                              ,'EffectiveCurrent'
-                                              ,'LTN'
-                                              ,SD_label)
-                                 # colors selected from 8-class diverging, colorbline-safe palette
-                                 # http://colorbrewer2.org/#type=diverging&scheme=RdYlBu&n=8 
-                                 ,color = c("#4575b4" # current var #1 - dark blue
-                                            ,"#abd9e9" # effective current var #1 - light blue
-                                            ,"#fdae61" # LTN var #1 line - orange 
-                                            ,"#fdae61")) # LTN var #1 shading - orange
-  
-  if (length(chart_data_long) > 1) {
-    colorScheme[[2]] <- data.table(variable = c('Current'
-                                                ,'EffectiveCurrent'
-                                                ,'LTN')
-                                   ,color = c("#000000" # current var #2 - black
-                                              ,"#fee090" #  effective current var # 2 - yellow 
-                                              ,"#d73027")) # LTN var #  - red
+  for (q in 1:length(chart_data_long)) {
+    if (q == 1) {
+      colorScheme[[1]] <- data.table(variable = c('Current'
+                                                  ,'EffectiveCurrent'
+                                                  ,'LTN'
+                                                  ,SD_label)
+                                     # colors selected from 8-class diverging, colorbline-safe palette
+                                     # http://colorbrewer2.org/#type=diverging&scheme=RdYlBu&n=8 
+                                     ,color = c("#4575b4" # current var #1 - dark blue
+                                                ,"#abd9e9" # effective current var #1 - light blue
+                                                ,"#fdae61" # LTN var #1 line - orange 
+                                                ,"#fdae61")) # LTN var #1 shading - orange
+    } else if (q == 2) {
+      colorScheme[[2]] <- data.table(variable = c('Current'
+                                                  ,'EffectiveCurrent'
+                                                  ,'LTN')
+                                     ,color = c("#000000" # current var #2 - black
+                                                ,"#fee090" #  effective current var # 2 - yellow 
+                                                ,"#d73027")) # LTN var #  - red
+    } else if (q == 3) {
+      colorScheme[[3]] <- data.table(variable = c('Current'
+                                                  ,'EffectiveCurrent'
+                                                  ,'LTN')
+                                     ,color = c("#862d59" # current var #3 - dark pink
+                                                ,"#cc6699" #  effective current var #3 - light pink 
+                                                ,"#33cc33")) # LTN var #3  - green
+    } else if (q == 4) {
+      colorScheme[[4]] <- data.table(variable = c('Current'
+                                                  ,'EffectiveCurrent'
+                                                  ,'LTN')
+                                     ,color = c("#996600" # current var #3 - burn orange
+                                                ,"#ffaa00" #  effective current var #3 light orange 
+                                                ,"#9933ff")) # LTN var #  - purple
+    }
   }
-  
   
   for (x in 1:length(chart_data_long)) {
     currentVars <- unique(chart_data_long[[x]][,Variable])
@@ -508,9 +531,11 @@ generateaWhereChart <- function(data
   
   ############################################################################                                                        
   
+  currentIndices <- which(ylabel == ylabel_unique[1])
+  
   #make chart based on appropriate graph type
   chart <- 
-    ggplot(data = chart_data_long[[1]]
+    ggplot(data = rbindlist(chart_data_long[currentIndices])
            ,aes(x = date)
            ,na.rm = TRUE)
   
@@ -518,7 +543,7 @@ generateaWhereChart <- function(data
     #plot actual lines on top
     chart <- 
       chart +
-      geom_ribbon(data = chart_data_long[[1]]
+      geom_ribbon(data = rbindlist(chart_data_long[currentIndices])
                 ,aes(ymin = measure
                      ,ymax = measure
                      ,fill = Variable
@@ -529,7 +554,7 @@ generateaWhereChart <- function(data
   } else {
     chart <- 
       chart +
-      geom_col(data = chart_data_long[[1]][!grepl(pattern = 'LTN',x = Variable,fixed = TRUE)], 
+      geom_col(data = rbindlist(chart_data_long[currentIndices])[!grepl(pattern = 'LTN',x = Variable,fixed = TRUE)], 
                aes(x = date
                    ,y = measure
                    ,fill = Variable)
@@ -541,7 +566,7 @@ generateaWhereChart <- function(data
       #               ,colour = Variable)
       #          ,na.rm = TRUE
       #          ,size = line_width) 
-       geom_ribbon(data = chart_data_long[[1]][grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
+       geom_ribbon(data = rbindlist(chart_data_long[currentIndices])[grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
               ,aes(x = date
                    ,ymin = measure
                    ,ymax = measure
@@ -550,44 +575,49 @@ generateaWhereChart <- function(data
               ,na.rm = TRUE
               ,size = line_width) 
     
-    numFillsLegend <- chart_data_long[[1]][,length(unique(Variable))]
-      
+    numFillsLegend <- rbindlist(chart_data_long[currentIndices])[,length(unique(Variable))]
   }
   
   #include SD info for main variable
   if (includeSTD == TRUE) {
-    chart <- 
-      chart + 
-      geom_ribbon(data = chart_data_long[[1]]
-                  ,aes(x = date
-                       ,ymin = ymin
-                       ,ymax = ymax
-                       ,fill = SD_label)
-                  ,alpha = 0.3 # adjust transparency of SD DEV shading
-                  ,linetype = "blank") 
     
-    numFillsLegend <- numFillsLegend + 1
+    for (z in 1:length(currentIndices)) {
+      chart <- 
+        chart + 
+        geom_ribbon(data = chart_data_long[[currentIndices[z]]]
+                    ,aes(x = date
+                         ,ymin = ymin
+                         ,ymax = ymax
+                         ,fill = SD_label)
+                    ,alpha = 0.3 # adjust transparency of SD DEV shading
+                    ,linetype = "blank") 
+    }
+   
+    
+    numFillsLegend <- numFillsLegend + length(currentIndices)
   }
   
   #add in line charts for other variables
   #linetypes <- c("solid", "dotted", "dashed")
-  if (length(chart_data_long) > 1) {
-    for (x in 2:length(chart_data_long)) {
+  if (length(ylabel_unique) > 1) {
+    for (x in 2:length(ylabel_unique)) {
+      currentIndices <- which(ylabel == ylabel_unique[x])
+      
       chart <-
         chart +
-        geom_ribbon(data = chart_data_long[[x]]
+        geom_ribbon(data = rbindlist(chart_data_long[currentIndices])
                   ,aes(x = date
-                       ,ymin = measure/scalingFactor[[x]]
-                       ,ymax = measure/scalingFactor[[x]]
+                       ,ymin = measure/unique(unlist(scalingFactor[currentIndices]))
+                       ,ymax = measure/unique(unlist(scalingFactor[currentIndices]))
                        ,colour = Variable
                        ,fill = Variable)
                   ,size = line_width
                   #,linetype = linetypes[x] # change line type for sunsequent variables
                   ) +
-        scale_y_continuous(sec.axis = sec_axis(~.*scalingFactor[[x]]
-                                               ,name = ylabel[[x]])) 
+        scale_y_continuous(sec.axis = sec_axis(~.*unique(unlist(scalingFactor[currentIndices]))
+                                               ,name = unique(unlist(ylabel[currentIndices])))) 
       
-      numFillsLegend <- numFillsLegend + chart_data_long[[x]][,length(unique(Variable))]
+      numFillsLegend <- numFillsLegend + rbindlist(chart_data_long[currentIndices])[,length(unique(Variable))]
     }
   }
   
@@ -634,7 +664,8 @@ generateaWhereChart <- function(data
     
     # Reorder legend entries
     guides(
-      fill = guide_legend(ncol = numFillsLegend
+      fill = guide_legend(#ncol = numFillsLegend
+                           nrow = ceiling(length(chart_data_long)/2)
                           ,order = 1), 
       #colour = guide_legend(ncol =  numColorsLegend 
       #                      ,order = 2)) + 
@@ -660,8 +691,6 @@ generateaWhereChart <- function(data
     theme(plot.title = element_text(size=size_font_main_title)) # main title font size  
     #theme(legend.spacing.y = unit(-0.18, "cm"))
   
-  
-  
   if (any(is.na(yAxisLimits)) == FALSE) {
     chart <- 
       chart + 
@@ -669,4 +698,4 @@ generateaWhereChart <- function(data
   }
   
   return(chart)
-      }
+}
