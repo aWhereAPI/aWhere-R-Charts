@@ -202,7 +202,7 @@ generateaWhereDataset <- function(lat
     
     obs <- suppressWarnings(aWhereAPI::daily_observed_latlng(lat
                                                              ,lon
-                                                             ,day_start
+                                                             ,day_start = as.character(day_start)
                                                              ,day_end = as.character(interim_day_end))) %>%
       data.table::as.data.table(.) %>%
       .[,date := lubridate::ymd(date)] %>%
@@ -249,8 +249,8 @@ generateaWhereDataset <- function(lat
   ##This works becayse the Ag endpoint includes forecast data
   ag <- suppressWarnings(aWhereAPI::agronomic_values_latlng(latitude = lat
                                                             ,longitude = lon
-                                                            ,day_start = day_start
-                                                            ,day_end = day_end)) %>%
+                                                            ,day_start = as.character(day_start)
+                                                            ,day_end = as.character(day_end))) %>%
     data.table::as.data.table(.) %>%
     .[,date := lubridate::ymd(date)] %>%
     .[,day := gsub(pattern = '20\\d\\d-',replacement = '',x = date)]
