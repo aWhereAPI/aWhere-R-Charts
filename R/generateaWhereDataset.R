@@ -538,8 +538,36 @@ generateaWhereDataset <- function(lat
   weather_full[,c('temperatures.mean.average'
                   ,'temperatures.mean.stdDev'
                   ,'wind.morningMax.amount') := NULL]
+
+  #For queries that go for more than a year the only way to get accumulated
+  #amounts correct is to join back to the original datasets because the API
+  #can't return the correct data
+  weather_full[,accumulatedPrecipitation.average := cumsum(precipitation.average)]
+  weather_full[,accumulatedGdd.average := cumsum(gdd.average)]
+  weather_full[,accumulatedPpet.average := cumsum(ppet.average)]
+  weather_full[,accumulatedPet.average := cumsum(pet.average)]
   
-  #ADD LOGIC TO ENSURE THAT NOTHING IS IMPOSSIBLE VALUES
+  #we need to do this calculation manually to get reasonable stdDev values
+  weather_full[,daily.accumulatedPrecipitation.stdDev := accumulatedPrecipitation.stdDev - shift(accumulatedPrecipitation.stdDev,n = 1,fill = 0)]
+  weather_full[,daily.accumulatedPet.stdDev := accumulatedPet.stdDev - shift(accumulatedPet.stdDev,n = 1, fill = 0)]
+  weather_full[,daily.accumulatedPpet.stdDev := accumulatedPpet.stdDev- shift(accumulatedPpet.stdDev,n = 1, fill = 0)]
+  weather_full[,daily.accumulatedGdd.stdDev := accumulatedGdd.stdDev- shift(accumulatedGdd.stdDev,n = 1,fill = 0)]
+  
+  weather_full[daily.accumulatedPrecipitation.stdDev < 0, daily.accumulatedPrecipitation.stdDev := 0]
+  weather_full[daily.accumulatedPet.stdDev < 0, daily.accumulatedPet.stdDev := 0]
+  weather_full[daily.accumulatedPpet.stdDev < 0, daily.accumulatedPpet.stdDev := 0]
+  weather_full[daily.accumulatedGdd.stdDev < 0, daily.accumulatedGdd.stdDev := 0]
+  
+  weather_full[,accumulatedPrecipitation.stdDev := cumsum(daily.accumulatedPrecipitation.stdDev )]
+  weather_full[,accumulatedPet.stdDev := cumsum(daily.accumulatedPet.stdDev)]
+  weather_full[,accumulatedPpet.stdDev := cumsum(daily.accumulatedPpet.stdDev)]
+  weather_full[,accumulatedGdd.stdDev:= cumsum(daily.accumulatedGdd.stdDev)]
+
+  weather_full[,c('daily.accumulatedPrecipitation.stdDev'
+                  ,'daily.accumulatedPet.stdDev'
+                  ,'daily.accumulatedPpet.stdDev'
+                  ,'daily.accumulatedGdd.stdDev') := NULL]
+  
   
   if (verbose == TRUE) {
     cat(paste0('    Process Complete \n\n'))
