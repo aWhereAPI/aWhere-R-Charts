@@ -57,6 +57,9 @@ generateaWhereDataset <- function(lat
     stop('Please load credentials for aWhereAPI before continuing')
   }
   
+  day_start <- as.character(day_start)
+  day_end <- as.character(day_end)
+  
   #set month-day combos to pull LTN for. If more than one year of data is requested, then
   #Jan 1-December 31 is set. Otherwise, the span is set based on the date span of the query.
   if((as.numeric(as.Date(day_end)) - as.numeric(as.Date(day_start))) < 365) {
@@ -202,7 +205,7 @@ generateaWhereDataset <- function(lat
     
     obs <- suppressWarnings(aWhereAPI::daily_observed_latlng(lat
                                                              ,lon
-                                                             ,day_start
+                                                             ,day_start = day_start
                                                              ,day_end = as.character(interim_day_end))) %>%
       data.table::as.data.table(.) %>%
       .[,date := lubridate::ymd(date)] %>%
