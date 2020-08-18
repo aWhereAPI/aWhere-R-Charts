@@ -148,7 +148,7 @@ generateaWhereChart <- function(data
           
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := ',currentColumn,']')))
           
-        } else if ((grepl(pattern = 'gdd|pet|ppet|precipitation'
+        } else if ((grepl(pattern = 'gdd|pet|precipitation'
                           ,x = currentColumn
                           ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
@@ -158,6 +158,24 @@ generateaWhereChart <- function(data
                                    ,na.rm = TRUE
                                    ,fill = NA
                                    ,partial = TRUE)]')))
+          
+        } else if ((grepl(pattern = 'ppet'
+                          ,x = currentColumn
+                          ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
+          eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := (zoo::rollapply(precipitation 
+                                                                                                   ,width = daysToAggregateOver 
+                                                                                                   ,align = "right"
+                                                                                                   ,FUN = sum
+                                                                                                   ,na.rm = TRUE
+                                                                                                   ,fill = NA
+                                                                                                   ,partial = TRUE)/
+                                                                                    zoo::rollapply(pet 
+                                                                                                   ,width = daysToAggregateOver 
+                                                                                                   ,align = "right"
+                                                                                                   ,FUN = sum
+                                                                                                   ,na.rm = TRUE
+                                                                                                   ,fill = NA
+                                                                                                   ,partial = TRUE))]')))
         } else {
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
                                    ,width = daysToAggregateOver 
@@ -229,16 +247,12 @@ generateaWhereChart <- function(data
     
     
     #if the variable to be plotted is relevant and if the user wants to use effective precipitation, calculate new values
-    if ((grepl(pattern = 'precipitation'
+    if ((grepl(pattern = 'precipitation|Ppet'
                ,x = variable[[x]]
-               ,ignore.case = TRUE) | grepl(pattern = 'Ppet'
-                                            ,x = variable[[x]]
-                                            ,ignore.case = TRUE)) & e_precip == TRUE) {
-      
+               ,ignore.case = TRUE)) & e_precip == TRUE) {
       
       #if e_precip is set to true, bring in daily precip data and calculate accumulated
       #daily precipitation using either default or user-defined threshold
-      
       
       dataToUse[,precipitation.amount.effective := precipitation.amount]
       
@@ -246,7 +260,9 @@ generateaWhereChart <- function(data
       dataToUse[,ppet.amount.effective := precipitation.amount.effective / pet.amount]
       
       dataToUse[,accumulatedPrecipitation.amount.effective := cumsum(precipitation.amount.effective)]
-      dataToUse[,accumulatedPpet.amount.effective := cumsum(ppet.amount.effective)]
+      
+      #dataToUse[,accumulatedPpet.amount.effective := cumsum(ppet.amount.effective)]
+      dataToUse[,accumulatedPpet.amount.effective := cumsum(accumulatedPrecipitation.amount.effective/accumulatedPet.amount)]
       
       varsToChart[[x]] <- c(varsToChart[[x]],paste0(variable[[x]],'.amount.effective'))
       variableNames[[x]] <- c(variableNames[[x]], 'EffectiveCurrent')
