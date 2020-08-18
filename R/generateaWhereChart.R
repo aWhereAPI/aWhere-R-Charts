@@ -139,18 +139,26 @@ generateaWhereChart <- function(data
     #take the mean
     for (x in 1:length(variablesToProcess)) {
       for (y in 1:length(typesOfColumns)) {
+
         
         currentColumn <- paste0(variablesToProcess[x],typesOfColumns[y])
         
-        if (grepl(pattern = 'accumulated'
+        #Additional years can be added to the dataset but only the .amount column will be present
+        if ((grepl(pattern = 'year|rolling'
+                    ,x = currentColumn
+                    ,ignore.case = TRUE) & typesOfColumns[y] %in% c('.average','.stdDev')) == TRUE) {
+          next
+        
+        } else if (grepl(pattern = 'accumulated'
                   ,x = currentColumn
                   ,fixed = TRUE) == TRUE) {
           
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := ',currentColumn,']')))
           
-        } else if ((grepl(pattern = 'gdd|pet|precipitation'
+        } else if ((grepl(pattern = 'gdd|pet|ppet|precipitation'
                           ,x = currentColumn
                           ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
+          
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
                                    ,width = daysToAggregateOver 
                                    ,align = "right"
@@ -158,24 +166,6 @@ generateaWhereChart <- function(data
                                    ,na.rm = TRUE
                                    ,fill = NA
                                    ,partial = TRUE)]')))
-          
-        } else if ((grepl(pattern = 'ppet'
-                          ,x = currentColumn
-                          ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
-          eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := (zoo::rollapply(precipitation 
-                                                                                                   ,width = daysToAggregateOver 
-                                                                                                   ,align = "right"
-                                                                                                   ,FUN = sum
-                                                                                                   ,na.rm = TRUE
-                                                                                                   ,fill = NA
-                                                                                                   ,partial = TRUE)/
-                                                                                    zoo::rollapply(pet 
-                                                                                                   ,width = daysToAggregateOver 
-                                                                                                   ,align = "right"
-                                                                                                   ,FUN = sum
-                                                                                                   ,na.rm = TRUE
-                                                                                                   ,fill = NA
-                                                                                                   ,partial = TRUE))]')))
         } else {
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
                                    ,width = daysToAggregateOver 
@@ -194,8 +184,8 @@ generateaWhereChart <- function(data
                                ,by = daysToAggregateOver),]
     
     #remove the previous variables
-    dataToUse[,unique(as.data.table(expand.grid(variablesToProcess
-                                                ,typesOfColumns))[,paste0(Var1,Var2)]) := NULL]
+    suppressWarnings(dataToUse[,unique(as.data.table(expand.grid(variablesToProcess
+                                                ,typesOfColumns))[,paste0(Var1,Var2)]) := NULL])
     #rename columns to previous names
     setnames(dataToUse
              ,colnames(dataToUse)
