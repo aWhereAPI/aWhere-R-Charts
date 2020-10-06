@@ -53,6 +53,7 @@
 #' @import ggthemes
 #' @import zoo
 #' @import data.table
+#' @import scales
 #'
 #' @return plot object
 #'
@@ -89,9 +90,8 @@ generateaWhereChart <- function(data
   ylabel          <- list()
   chart_data      <- list()
   chart_data_long <- list()
-  scalingFactor   <- list()
-  offsetFactor    <- list()
   colorScheme     <- list()
+  rangeToUse      <- list()
   
   # variables for title and label font sizes 
   size_font_main_title <- 16
@@ -139,10 +139,17 @@ generateaWhereChart <- function(data
     #take the mean
     for (x in 1:length(variablesToProcess)) {
       for (y in 1:length(typesOfColumns)) {
+
         
         currentColumn <- paste0(variablesToProcess[x],typesOfColumns[y])
         
-        if (grepl(pattern = 'accumulated'
+        #Additional years can be added to the dataset but only the .amount column will be present
+        if ((grepl(pattern = 'year|rolling'
+                    ,x = currentColumn
+                    ,ignore.case = TRUE) & typesOfColumns[y] %in% c('.average','.stdDev')) == TRUE) {
+          next
+        
+        } else if (grepl(pattern = 'accumulated'
                   ,x = currentColumn
                   ,fixed = TRUE) == TRUE) {
           
@@ -151,6 +158,7 @@ generateaWhereChart <- function(data
         } else if ((grepl(pattern = 'gdd|pet|ppet|precipitation'
                           ,x = currentColumn
                           ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
+          
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
                                    ,width = daysToAggregateOver 
                                    ,align = "right"
@@ -176,8 +184,8 @@ generateaWhereChart <- function(data
                                ,by = daysToAggregateOver),]
     
     #remove the previous variables
-    dataToUse[,unique(as.data.table(expand.grid(variablesToProcess
-                                                ,typesOfColumns))[,paste0(Var1,Var2)]) := NULL]
+    suppressWarnings(dataToUse[,unique(as.data.table(expand.grid(variablesToProcess
+                                                ,typesOfColumns))[,paste0(Var1,Var2)]) := NULL])
     #rename columns to previous names
     setnames(dataToUse
              ,colnames(dataToUse)
@@ -229,16 +237,12 @@ generateaWhereChart <- function(data
     
     
     #if the variable to be plotted is relevant and if the user wants to use effective precipitation, calculate new values
-    if ((grepl(pattern = 'precipitation'
+    if ((grepl(pattern = 'precipitation|Ppet'
                ,x = variable[[x]]
-               ,ignore.case = TRUE) | grepl(pattern = 'Ppet'
-                                            ,x = variable[[x]]
-                                            ,ignore.case = TRUE)) & e_precip == TRUE) {
-      
+               ,ignore.case = TRUE)) & e_precip == TRUE) {
       
       #if e_precip is set to true, bring in daily precip data and calculate accumulated
       #daily precipitation using either default or user-defined threshold
-      
       
       dataToUse[,precipitation.amount.effective := precipitation.amount]
       
@@ -246,7 +250,9 @@ generateaWhereChart <- function(data
       dataToUse[,ppet.amount.effective := precipitation.amount.effective / pet.amount]
       
       dataToUse[,accumulatedPrecipitation.amount.effective := cumsum(precipitation.amount.effective)]
-      dataToUse[,accumulatedPpet.amount.effective := cumsum(ppet.amount.effective)]
+      
+      #dataToUse[,accumulatedPpet.amount.effective := cumsum(ppet.amount.effective)]
+      dataToUse[,accumulatedPpet.amount.effective := cumsum(accumulatedPrecipitation.amount.effective/accumulatedPet.amount)]
       
       varsToChart[[x]] <- c(varsToChart[[x]],paste0(variable[[x]],'.amount.effective'))
       variableNames[[x]] <- c(variableNames[[x]], 'EffectiveCurrent')
@@ -417,6 +423,7 @@ generateaWhereChart <- function(data
                                   ,by = 'date')
     
     setkey(chart_data_long[[x]],Variable,date)
+    
   }
   
   #if title is not given by user, set it to date range + variable
@@ -439,14 +446,19 @@ generateaWhereChart <- function(data
   for (x in 1:length(ylabel_unique)) {
     currentIndices <- which(ylabel == ylabel_unique[x])
     
-    if (x == 1) {
-      rangeToUse <- diff(rbindlist(chart_data_long[currentIndices])[,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])
-      offsetFactor[currentIndices] <- 0
-      scalingFactor[currentIndices] <- 1
-    } else {
-      #offsetFactor[[x]] <- chart_data_long[[x]][,min(measure)]
-      #scalingFactor[[x]] <- (diff(chart_data_long[[x]][,quantile(x = measure,na.rm = TRUE,probs = c(0,1))])/2)/rangeToUse
-      scalingFactor[currentIndices] <- rbindlist(chart_data_long[currentIndices])[,quantile(x = measure,na.rm = TRUE,probs = c(1))]/rangeToUse
+    rangeToUse[[currentIndices]] <- rbindlist(chart_data_long[currentIndices])[,quantile(x = measure,na.rm = TRUE,probs = c(0,1))]
+    
+    if (x > 1) {
+
+      for (z in 1:length(currentIndices)) {
+       
+         chart_data_long[[currentIndices[z]]][,measure := scales::rescale(x = measure
+                                                                        ,from = c(min(measure
+                                                                                      ,na.rm = TRUE)
+                                                                                  ,max(measure
+                                                                                       ,na.rm = TRUE))
+                                                                        ,to = rangeToUse[[1]])]
+      }
     }
   }
   
@@ -607,14 +619,19 @@ generateaWhereChart <- function(data
         chart +
         geom_ribbon(data = rbindlist(chart_data_long[currentIndices])
                   ,aes(x = date
-                       ,ymin = measure/unique(unlist(scalingFactor[currentIndices]))
-                       ,ymax = measure/unique(unlist(scalingFactor[currentIndices]))
+                       ,ymin = measure
+                       ,ymax = measure
                        ,colour = Variable
                        ,fill = Variable)
                   ,size = line_width
                   #,linetype = linetypes[x] # change line type for sunsequent variables
                   ) +
-        scale_y_continuous(sec.axis = sec_axis(~.*unique(unlist(scalingFactor[currentIndices]))
+        #we need to map the values back to the original scale for plotting on
+        #the side if Multiple values were to exist for currentIndices they will
+        #have the same info stored, hence we can take the first
+        scale_y_continuous(sec.axis = sec_axis(~ scales::rescale(x = .
+                                                                    ,from= rangeToUse[[1]]
+                                                                    ,to = rangeToUse[currentIndices][[1]])
                                                ,name = unique(unlist(ylabel[currentIndices])))) 
       
       numFillsLegend <- numFillsLegend + rbindlist(chart_data_long[currentIndices])[,length(unique(Variable))]
