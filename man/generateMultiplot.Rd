@@ -7,13 +7,6 @@
 generateMultiplot(..., title, fontsize = 12, cols = 2)
 }
 \arguments{
-\item{-}{...: All plot objects to assemble, separated by commas. (required)}
-
-\item{-}{title: character string of the title you would like to assign to the multiplot,
-multiplot title is independent of any titles set to individual plots. (required)}
-
-\item{-}{fontsize: numeric value of the fontsize to use in rendering the multiplot title, default is 12. (optional)}
-
 \item{-}{cols: numeric value for the number of columns into which to assemble input plots, default is 2. (optional)}
 }
 \value{
