@@ -4,23 +4,17 @@
 \alias{generateaWhereDataset}
 \title{generateaWhereDataset}
 \usage{
-generateaWhereDataset(lat, lon, day_start, day_end, year_start, year_end,
-  verbose = TRUE)
+generateaWhereDataset(
+  lat,
+  lon,
+  day_start,
+  day_end,
+  year_start,
+  year_end,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{-}{lat: numeric latitude point in decimal degrees (required)}
-
-\item{-}{lon: numeric longitude point in decimal degrees (required)}
-
-\item{-}{day_start: character string in YYYY-MM-DD format,
-denoting the first day for which you want weather data retrieved  (required)}
-
-\item{-}{day_end: character string in YYYY-MM-DD format,
-denoting the last day for which you want weather data retrieved  (required)}
-
-\item{-}{year_start: numeric in YYYY format, denoting the first year
-of data which should be included in the norms calculation.  (required)}
-
 \item{-}{year_end: numeric in YYYY format, denoting the last year
 of data which should be included in the norms calculation (required)}
 }

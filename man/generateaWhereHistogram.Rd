@@ -4,21 +4,16 @@
 \alias{generateaWhereHistogram}
 \title{generateaWhereHistogram}
 \usage{
-generateaWhereHistogram(data, variable, compare = FALSE,
-  compare_var = NULL, xlabel = NULL, title = NULL)
+generateaWhereHistogram(
+  data,
+  variable,
+  compare = FALSE,
+  compare_var = NULL,
+  xlabel = NULL,
+  title = NULL
+)
 }
 \arguments{
-\item{-}{data: data frame containing multiple observations - observations can be across time or locations (required)}
-
-\item{-}{variable: character string denoting the column name (from data) to chart. (required)}
-
-\item{-}{compare: logical, if set to TRUE function will chart a second variable, 
-defined by the parameter compare_var. Default set to FALSE. (optional)}
-
-\item{-}{compare_var: character string denoting the column name of the second variable to chart (optional)}
-
-\item{-}{xlabel: character string denoting the label to give to the x axis of the chart (optional)}
-
 \item{-}{title: character string denoting the title to assign to the plot - default is the date span of data (optional)}
 }
 \value{

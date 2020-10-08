@@ -4,44 +4,22 @@
 \alias{generateaWhereChart}
 \title{generateaWhereChart}
 \usage{
-generateaWhereChart(data, variable, variable_rightAxis = NULL,
-  title = NULL, e_precip = FALSE, e_threshold = 35, doRoll = FALSE,
-  rolling_window = 30, includeSTD = FALSE, mainGraphType = "line",
-  daysToAggregateOver = NULL, yAxisLimits = NA)
+generateaWhereChart(
+  data,
+  variable,
+  variable_rightAxis = NULL,
+  title = NULL,
+  e_precip = FALSE,
+  e_threshold = 35,
+  doRoll = FALSE,
+  rolling_window = 30,
+  includeSTD = FALSE,
+  mainGraphType = "line",
+  daysToAggregateOver = NULL,
+  yAxisLimits = NA
+)
 }
 \arguments{
-\item{-}{data: data frame in which variables are named according to the schema output by generateaWhereChart.R (required)}
-
-\item{-}{variable: character string denoting the variable to chart. Acceptable values 
-are accumulatedGdd, accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
-gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
-or rollingavgppet. (required)}
-
-\item{-}{variable_rightAxis:  What variable to plot over the primary variable.
-The right y-axis of the plot will be used to present its range.  
-Note that it will always be plotted as a line chart. Same valid
-values as the variable param.  (optional)}
-
-\item{-}{title: character string of title to assign to the plot. (required)}
-
-\item{-}{e_precip: logical, if set to TRUE, effective precipitation will 
-be calculated and charted based on e_threshold. Default is set to FALSE. (optional)}
-
-\item{-}{e_threshold: numeric value (in milimeters) for the daily maximum used to calculate 
-effective precipitation if e_precip is set to TRUE. (optional)}
-
-\item{-}{doRoll: apply a rolling average to the calculation.}
-
-\item{-}{rolling_window: numeric value for the number of days to use in rolling 
-average calculations.  Default value is 30. (optional)}
-
-\item{-}{includeSTD: whether to plot the standard deviation as a ribbon around the LTN value of the main variable. (optional)}
-
-\item{-}{maingraphType: Which type of graph to make for the main plot.  Valid values are "line" and "bar" (optional)}
-
-\item{-}{daysToAggregateOver: Used to temporally aggregate data.  Unit is in days.
-This is done based on the startdate of the dataset, not a calendar week (otpional)}
-
 \item{-}{yAxisLimits: Used to set the limits of the y axis explicitly.  If used, must be a two element vector of the form 
 c(minValue, maxValue) (optional)}
 }

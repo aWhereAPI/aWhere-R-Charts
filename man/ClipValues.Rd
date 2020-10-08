@@ -7,10 +7,6 @@
 ClipValues(values, max.thresh, min.thresh = 0)
 }
 \arguments{
-\item{-}{values: (vector) input variables to clip.}
-
-\item{-}{max.thresh (numeric) values above this value will be assigned to this value.}
-
 \item{-}{min.thresh (numeric) values below this value will be assigned to this value.}
 }
 \value{
