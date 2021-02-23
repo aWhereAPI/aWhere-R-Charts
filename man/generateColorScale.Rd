@@ -7,7 +7,7 @@
 generateColorScale(fig, add.years, add.years.colors)
 }
 \arguments{
-\item{-}{add.years.colors}
+\item{add.years.colors}{}
 }
 \value{
 

@@ -7,7 +7,10 @@
 getCoordinateInfo(points, attribute)
 }
 \arguments{
-\item{-}{attribute: character string of the type of information desired, accepted inputs 
+\item{points}{data frame or matrix of points, with longitude in the first column and
+latitude in the second. Points should be in decimal degrees. (required)}
+
+\item{attribute}{character string of the type of information desired, accepted inputs 
 are "country", "continent", or "continent classification". (required)}
 }
 \value{

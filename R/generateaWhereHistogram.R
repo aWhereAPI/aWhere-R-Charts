@@ -13,13 +13,13 @@
 #'
 #' @references 
 #'
-#' @param - data: data frame containing multiple observations - observations can be across time or locations (required)
-#' @param - variable: character string denoting the column name (from data) to chart. (required)
-#' @param - compare: logical, if set to TRUE function will chart a second variable, 
-#'             defined by the parameter compare_var. Default set to FALSE. (optional)
-#' @param - compare_var: character string denoting the column name of the second variable to chart (optional)
-#' @param - xlabel: character string denoting the label to give to the x axis of the chart (optional)
-#' @param - title: character string denoting the title to assign to the plot - default is the date span of data (optional)
+#' @param data data frame containing multiple observations - observations can be across time or locations (required)
+#' @param variable character string denoting the column name (from data) to chart. (required)
+#' @param compare logical, if set to TRUE function will chart a second variable, 
+#'                 defined by the parameter compare_var. Default set to FALSE. (optional)
+#' @param compare_var character string denoting the column name of the second variable to chart (optional)
+#' @param xlabel character string denoting the label to give to the x axis of the chart (optional)
+#' @param title character string denoting the title to assign to the plot - default is the date span of data (optional)
 #'
 #' @import tidyr
 #' @import zoo

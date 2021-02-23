@@ -17,15 +17,15 @@
 #'
 #' @references http://developer.awhere.com/api/reference/
 #'
-#' @param - lat: numeric latitude point in decimal degrees (required)
-#' @param - lon: numeric longitude point in decimal degrees (required)
-#' @param - day_start: character string in YYYY-MM-DD format,
-#'             denoting the first day for which you want weather data retrieved  (required)
-#' @param - day_end: character string in YYYY-MM-DD format,
+#' @param lat numeric latitude point in decimal degrees (required)
+#' @param lon numeric longitude point in decimal degrees (required)
+#' @param day_start character string in YYYY-MM-DD format,
+#'            denoting the first day for which you want weather data retrieved  (required)
+#' @param day_end character string in YYYY-MM-DD format,
 #'             denoting the last day for which you want weather data retrieved  (required)
-#' @param - year_start: numeric in YYYY format, denoting the first year
+#' @param year_start numeric in YYYY format, denoting the first year
 #'             of data which should be included in the norms calculation.  (required)
-#' @param - year_end: numeric in YYYY format, denoting the last year
+#' @param year_end numeric in YYYY format, denoting the last year
 #'             of data which should be included in the norms calculation (required)
 #'
 #' @import dplyr

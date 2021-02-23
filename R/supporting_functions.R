@@ -6,9 +6,9 @@
 #' @details
 #' Clips the extremely large or small values of an input vector. 
 #'
-#' @param - values: (vector) input variables to clip.
-#' @param - max.thresh (numeric) values above this value will be assigned to this value.
-#' @param - min.thresh (numeric) values below this value will be assigned to this value.
+#' @param values (vector) input variables to clip.
+#' @param max.thresh (numeric) values above this value will be assigned to this value.
+#' @param min.thresh (numeric) values below this value will be assigned to this value.
 #'
 #' @return  values input vector, altered to have new minimum/maximum values. 
 #'
@@ -33,13 +33,13 @@ ClipValues <- function(values, max.thresh, min.thresh = 0){
 #' Opens the jpeg graphics device with the specified settings and saves the plot
 #' to an image file (.jpeg) 
 #'
-#' @param - plt: (ggplot plot object) plot to write to file
-#' @param - plt.title: (character string) title of the plot, used to name the output file
-#' @param - w: (integer, optional with default value of 10) width of graphics device
-#' @param - h: (integer, optional with default value of 6) height of graphics device 
-#' @param - u: (character, optional with default value of "in") the units in which 
+#' @param plt (ggplot plot object) plot to write to file
+#' @param plt.title (character string) title of the plot, used to name the output file
+#' @param w (integer, optional with default value of 10) width of graphics device
+#' @param h (integer, optional with default value of 6) height of graphics device 
+#' @param u (character, optional with default value of "in") the units in which 
 #'             height and weight are given. Can be "in", "px", "cm", or "mm".
-#' @param - r (integer, optional with default value of 500) nominal resolution in ppi
+#' @param r (integer, optional with default value of 500) nominal resolution in ppi
 #'
 #' @return  
 #'
@@ -71,7 +71,7 @@ WriteJpeg <- function(plt, plt.title, w=10, h=6, u="in", r=500){
 #' @details
 #' Removes illegal characters for titles so they can be used for saving files
 #'
-#' @param - title: character string to remove characters of
+#' @param title character string to remove characters of
 #'
 #' @return  
 #'
@@ -96,17 +96,15 @@ formatGraphTitleForFileName <- function(title) {
 #' @details
 #' #used to generate colorscheme when additional years are added to graph
 #'
-#' @param - fig
-#' @param - add.years
-#' @param - add.years.colors
+#' @param fig
+#' @param add.years
+#' @param add.years.colors
 #'
 #' @return  
 #'
 #' @examples
 #' 
 #' @export
-
-
 
 generateColorScale <- function(fig
                                ,add.years
@@ -150,5 +148,3 @@ generateColorScale <- function(fig
   return(list(colorScale = colorScaleToUse,fillScale = fillScaleToUse))
   
 }
-
-

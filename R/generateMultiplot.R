@@ -15,11 +15,11 @@
 #'
 #' @references See other functions in this package for generating plots as inputs.
 #'
-#' @param - ...: All plot objects to assemble, separated by commas. (required)
-#' @param - title: character string of the title you would like to assign to the multiplot,
+#' @param ... All plot objects to assemble, separated by commas. (required)
+#' @param title character string of the title you would like to assign to the multiplot,
 #'                           multiplot title is independent of any titles set to individual plots. (required)
-#' @param - fontsize: numeric value of the fontsize to use in rendering the multiplot title, default is 12. (optional)
-#' @param - cols: numeric value for the number of columns into which to assemble input plots, default is 2. (optional)
+#' @param fontsize numeric value of the fontsize to use in rendering the multiplot title, default is 12. (optional)
+#' @param cols numeric value for the number of columns into which to assemble input plots, default is 2. (optional)
 #' 
 #' @import grid
 #'

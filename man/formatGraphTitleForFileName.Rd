@@ -7,7 +7,7 @@
 formatGraphTitleForFileName(title)
 }
 \arguments{
-\item{-}{title: character string to remove characters of}
+\item{title}{character string to remove characters of}
 }
 \value{
 

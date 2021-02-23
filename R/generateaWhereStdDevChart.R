@@ -17,20 +17,20 @@
 #'
 #' @references http://developer.awhere.com/api/reference/
 #'
-#' @param - data: data frame in which variables are named according to the aWhere API conventions (required)
-#' @param - variable: character string denoting the variable to chart. Acceptable values 
+#' @param data data frame in which variables are named according to the aWhere API conventions (required)
+#' @param variable character string denoting the variable to chart. Acceptable values 
 #'             are accumulatedGdd, accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
 #'             gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
 #'             or rollingavgppet. (required)
-#' @param - title: character string of title to assign to the plot. (required)
-#' @param - e_precip: logical, if set to TRUE, effective precipitation will 
+#' @param title character string of title to assign to the plot. (required)
+#' @param e_precip logical, if set to TRUE, effective precipitation will 
 #'             be calculated and charted based on e_threshold. Default is set to FALSE. (optional)
-#' @param - e_threshold: numeric value (in milimeters) for the daily maximum used to calculate 
+#' @param e_threshold numeric value (in milimeters) for the daily maximum used to calculate 
 #'             effective precipitation if e_precip is set to TRUE. (optional)
-#' @param - rolling_window: numeric value for the number of days to use in rolling 
+#' @param rolling_window numeric value for the number of days to use in rolling 
 #'             average calculations, only applicable if the variable parameter is set to
 #'             "rollingavgppet". Default value is 30. (optional)
-#' @param - yAxisLimits: Used to set the limits of the y axis explicitly.  If used, must be a two element vector of the form 
+#' @param yAxisLimits Used to set the limits of the y axis explicitly.  If used, must be a two element vector of the form 
 #'                       c(minValue, maxValue) (optional)
 #' @import tidyr
 #' @import dplyr
