@@ -27,6 +27,7 @@
 #'             be calculated and charted based on e_threshold. Default is set to FALSE. (optional)
 #' @param e_threshold numeric value (in milimeters) for the daily maximum used to calculate 
 #'             effective precipitation if e_precip is set to TRUE. (optional)
+#' @param doRoll Boolean for whether a rolling calculation should be done to smooth the data (optional)
 #' @param rolling_window numeric value for the number of days to use in rolling 
 #'             average calculations, only applicable if the variable parameter is set to
 #'             "rollingavgppet". Default value is 30. (optional)
