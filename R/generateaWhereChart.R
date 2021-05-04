@@ -25,8 +25,8 @@
 #' @param data data frame in which variables are named according to the schema output by generateaWhereChart.R (required)
 #' @param variable character string denoting the variable to chart. Acceptable values 
 #'             are accumulatedGdd, accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
-#'             gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
-#'             or rollingavgppet. (required)
+#'             gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind, rollingavgppet,
+#'             or "Maximum Length of Dry Spell". (required)
 #' @param variable_rightAxis  What variable to plot over the primary variable.  
 #'                The right y-axis of the plot will be used to present its range.  
 #'                Note that it will always be plotted as a line chart. Same valid
@@ -45,7 +45,8 @@
 #'                               This is done based on the startdate of the dataset, not a calendar week (otpional)
 #' @param yAxisLimits Used to set the limits of the y axis explicitly.  If used, must be a two element vector of the form 
 #'                       c(minValue, maxValue) (optional)
-#'
+#' @param indexSpecificValue For the Climate Indices this tool can plot the user can ovveride the default value of the index 
+#'                           using this parameter (optional)
 #'
 #' @import tidyr
 #' @import dplyr
@@ -63,9 +64,8 @@
 #'                              ,e_precip = TRUE
 #'                              ,e_threshold = 10
 #'                              ,doRoll = TRUE)}
-
+#'                              
 #' @export
-
 
 generateaWhereChart <- function(data
                                 ,variable
@@ -78,7 +78,8 @@ generateaWhereChart <- function(data
                                 ,includeSTD = FALSE
                                 ,mainGraphType = 'line'
                                 ,daysToAggregateOver = NULL
-                                ,yAxisLimits = NA) {
+                                ,yAxisLimits = NA
+                                ,indexSpecificValue = NULL) {
   
   
   #We are using a list consturct to hold all variables so we can loop over its length
@@ -109,12 +110,68 @@ generateaWhereChart <- function(data
   SD_label <- paste0('SD of LTN')
   
   variable <- as.list(copy(temp_variable))
-
+  
   if (is.null(variable_rightAxis) == FALSE) {
     variable <- c(variable,as.list(copy(variable_rightAxis)))
   }
   
   variable.orig <- copy(variable)
+  
+  #Calculate any needed derived indices
+  
+  for (z in 1:length(variable)) {
+    if (grepl(pattern = 'maxLenDrySpell||Maximum Length of Dry Spell'
+              ,x = variable[[z]]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'precipitation'
+                    ,x = colnames(data)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Precipitation data required to calculate the index 'Maximum Length of Dry Spell.")
+      } 
+      #suppressWarnings(data[,c('tempCol.current','tempCol.ltn','counter.current','counter.ltn','group.current','group.ltn') := NULL])
+      
+      suppressWarnings(dataToUse[,c('maxLenDrySpell'
+                                    ,'maxLenDrySpell.amount'
+                                    ,'maxLenDrySpell.average'
+                                    ,'maxLenDrySpell.stdDev') := NULL])
+      
+      if (is.null(indexSpecificValue) == TRUE) {
+        indexSpecificValue <- 1
+      }
+      dataToUse[,c('tempCol.current','tempCol.ltn') := FALSE]
+      dataToUse[precipitation.amount < indexSpecificValue,tempCol.current := TRUE]
+      dataToUse[precipitation.average < indexSpecificValue, tempCol.ltn := TRUE]
+      
+      #Count counts of consecutive entries
+      dataToUse[, counter.current := as.numeric(rowid(rleid(tempCol.current)))]
+      dataToUse[, counter.ltn := as.numeric(rowid(rleid(tempCol.ltn)))]
+      
+      #Set FALSE entries to NA
+      dataToUse[tempCol.current == FALSE, counter.current := as.numeric(NA)]
+      dataToUse[tempCol.ltn == FALSE, counter.ltn := as.numeric(NA)]
+      
+      #Creating a grouping variable for each FALSE period
+      dataToUse[tempCol.current == TRUE & counter.current == 1, group.current := 1:.N]
+      dataToUse[tempCol.ltn == TRUE & counter.ltn == 1, group.ltn := 1:.N]
+      
+      #Carry grouping variable forwards
+      dataToUse[,group.current := na.locf(group.current,na.rm = FALSE,fromLast = FALSE)]
+      dataToUse[,group.ltn := na.locf(group.ltn,na.rm = FALSE,fromLast = FALSE)]
+      
+      #Carry grouping variable backwards
+      dataToUse[,group.current := na.locf(group.current,na.rm = FALSE,fromLast = TRUE)]
+      dataToUse[,group.ltn := na.locf(group.ltn,na.rm = FALSE,fromLast = TRUE)]
+      
+      #Find the max dry length for each period
+      suppressWarnings(dataToUse[,counter.current := max(counter.current,na.rm = TRUE),by = 'group.current'])
+      suppressWarnings(dataToUse[,counter.ltn := max(counter.ltn,na.rm = TRUE),by = 'group.ltn'])
+      
+      suppressWarnings(dataToUse[,c('tempCol.current','tempCol.ltn','group.current','group.ltn') := NULL])
+      
+      setnames(dataToUse,c('counter.current','counter.ltn'),c('maxLenDrySpell.amount','maxLenDrySpell.average'))
+      dataToUse[,maxLenDrySpell.stdDev := 0]
+    }
+  }
   
   if (!is.null(daysToAggregateOver)) {
     
@@ -139,19 +196,18 @@ generateaWhereChart <- function(data
     #take the mean
     for (x in 1:length(variablesToProcess)) {
       for (y in 1:length(typesOfColumns)) {
-
         
         currentColumn <- paste0(variablesToProcess[x],typesOfColumns[y])
         
         #Additional years can be added to the dataset but only the .amount column will be present
         if ((grepl(pattern = 'year|rolling'
-                    ,x = currentColumn
-                    ,ignore.case = TRUE) & typesOfColumns[y] %in% c('.average','.stdDev')) == TRUE) {
+                   ,x = currentColumn
+                   ,ignore.case = TRUE) & typesOfColumns[y] %in% c('.average','.stdDev')) == TRUE) {
           next
-        
+          
         } else if (grepl(pattern = 'accumulated'
-                  ,x = currentColumn
-                  ,fixed = TRUE) == TRUE) {
+                         ,x = currentColumn
+                         ,fixed = TRUE) == TRUE) {
           
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := ',currentColumn,']')))
           
@@ -166,6 +222,19 @@ generateaWhereChart <- function(data
                                    ,na.rm = TRUE
                                    ,fill = NA
                                    ,partial = TRUE)]')))
+          
+        } else if ((grepl(pattern = 'maxLenDrySpell'
+                          ,x = currentColumn
+                          ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
+          
+          eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
+                                   ,width = daysToAggregateOver 
+                                   ,align = "left"
+                                   ,FUN = max
+                                   ,na.rm = TRUE
+                                   ,fill = NA
+                                   ,partial = TRUE)]')))
+          
         } else {
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
                                    ,width = daysToAggregateOver 
@@ -179,13 +248,13 @@ generateaWhereChart <- function(data
     }
     
     #take every Nth row
-    dataToUse <- dataToUse[seq(from = 1
+    dataToUse <- dataToUse[seq(from = daysToAggregateOver + 1
                                ,to = nrow(dataToUse)
                                ,by = daysToAggregateOver),]
     
     #remove the previous variables
     suppressWarnings(dataToUse[,unique(as.data.table(expand.grid(variablesToProcess
-                                                ,typesOfColumns))[,paste0(Var1,Var2)]) := NULL])
+                                                                 ,typesOfColumns))[,paste0(Var1,Var2)]) := NULL])
     #rename columns to previous names
     setnames(dataToUse
              ,colnames(dataToUse)
@@ -214,16 +283,20 @@ generateaWhereChart <- function(data
     } else if (variable[[x]] == 'rollingavgppet') {
       variable[[x]] <- 'ppet'
       doRoll <- TRUE
+    } else if (variable[[x]] == 'Maximum Length of Dry Spell') {
+      variable[[x]] <- 'maxLenDrySpell'
+      includeSTD <- FALSE
+      
     }
     
     #Confirm chosen variable is in the data structure
     if (any(grepl(pattern = variable[[x]]
-                  ,x = colnames(data)
+                  ,x = colnames(dataToUse)
                   ,fixed = TRUE)) == FALSE) {
-      stop("Input Variable is not from allowed list. Please use ccumulatedGdd, 
-           accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
-           gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind
-           or rollingavgppet.")
+      stop("Input Variable is not from allowed list. Please use maxTemp, minTemp, 
+           accumulatedGdd, accumulatedPet, accumulatedPpet, accumulatedPrecipitation,
+           gdd, pet, precipitation, maxRH, minRH, solar,averageWind,dayMaxWind, 
+           rollingavgppet, or maxLenDrySpell.")
     } else {
       varsToChart[[x]] <- c(paste0(variable[[x]],'.amount')
                             ,paste0(variable[[x]],'.average')
@@ -234,7 +307,6 @@ generateaWhereChart <- function(data
                               ,"LTN"
                               ,"LTNstddev")
     }
-    
     
     #if the variable to be plotted is relevant and if the user wants to use effective precipitation, calculate new values
     if ((grepl(pattern = 'precipitation|Ppet'
@@ -312,6 +384,18 @@ generateaWhereChart <- function(data
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'm/s'
+    } else if (grepl(pattern = 'maxLenDrySpell'
+                     ,x = variable[[x]]
+                     ,ignore.case = TRUE) == TRUE) {
+      ylabel[[x]] = 'Days'
+      
+      #NOTE THAT THIS IS A TERRIBLE PLACE FOR THIS BUT JC REQUESTED THAT FOR THIS INDEX WE CHANGE THE LTN TO BE THE AVERAGE ACROSS THE DATA WHEN AGGREGATING OVER YEARS
+      
+      if (!is.null(daysToAggregateOver)) {
+        if (daysToAggregateOver == 365) {
+          dataToUse[,maxLenDrySpell.average := mean(maxLenDrySpell.amount)]
+        }
+      }
     }
     
     #filter out relevant data
@@ -321,13 +405,12 @@ generateaWhereChart <- function(data
     chart_data[[x]] <- setNames(chart_data[[x]], c(variableNames[[x]]))
     
     
-    
     chart_data[[x]][,c('ymax'
                        ,'ymin'):= list(LTN + LTNstddev
                                        ,LTN - LTNstddev)]
     
     #for these variables, the y axis should not below zero
-    if (grepl(pattern = 'Gdd|PPet|Pet|precipitation|relativeHumidity|solar|wind'
+    if (grepl(pattern = 'Gdd|PPet|Pet|precipitation|relativeHumidity|solar|wind|maxLenDrySpell'
               ,x = variable[[x]]
               ,ignore.case = TRUE)) {
       chart_data[[x]][ymin < 0, ymin := 0]
@@ -412,9 +495,9 @@ generateaWhereChart <- function(data
     #change data format from wide to long
     chart_data_long[[x]] <- 
       tidyr::gather(chart_data[[x]][,variableNames[[x]],with = FALSE] 
-                      ,key = Variable 
-                      ,value = measure 
-                      ,2:ncol(chart_data[[x]][,variableNames[[x]],with = FALSE])) %>%
+                    ,key = Variable 
+                    ,value = measure 
+                    ,2:ncol(chart_data[[x]][,variableNames[[x]],with = FALSE])) %>%
       as.data.table(.)
     
     
@@ -449,15 +532,15 @@ generateaWhereChart <- function(data
     rangeToUse[[currentIndices]] <- rbindlist(chart_data_long[currentIndices])[,quantile(x = measure,na.rm = TRUE,probs = c(0,1))]
     
     if (x > 1) {
-
+      
       for (z in 1:length(currentIndices)) {
-       
-         chart_data_long[[currentIndices[z]]][,measure := scales::rescale(x = measure
-                                                                        ,from = c(min(measure
-                                                                                      ,na.rm = TRUE)
-                                                                                  ,max(measure
-                                                                                       ,na.rm = TRUE))
-                                                                        ,to = rangeToUse[[1]])]
+        
+        chart_data_long[[currentIndices[z]]][,measure := scales::rescale(x = measure
+                                                                         ,from = c(min(measure
+                                                                                       ,na.rm = TRUE)
+                                                                                   ,max(measure
+                                                                                        ,na.rm = TRUE))
+                                                                         ,to = rangeToUse[[1]])]
       }
     }
   }
@@ -556,11 +639,11 @@ generateaWhereChart <- function(data
     chart <- 
       chart +
       geom_ribbon(data = rbindlist(chart_data_long[currentIndices])
-                ,aes(ymin = measure
-                     ,ymax = measure
-                     ,fill = Variable
-                     ,colour = Variable)
-                ,size = line_width) 
+                  ,aes(ymin = measure
+                       ,ymax = measure
+                       ,fill = Variable
+                       ,colour = Variable)
+                  ,size = line_width) 
     
     numFillsLegend <- chart_data_long[[1]][,length(unique(Variable))]
   } else {
@@ -578,14 +661,14 @@ generateaWhereChart <- function(data
       #               ,colour = Variable)
       #          ,na.rm = TRUE
       #          ,size = line_width) 
-       geom_ribbon(data = rbindlist(chart_data_long[currentIndices])[grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
-              ,aes(x = date
-                   ,ymin = measure
-                   ,ymax = measure
-                   ,colour = Variable
-                   ,fill = Variable)
-              ,na.rm = TRUE
-              ,size = line_width) 
+      geom_ribbon(data = rbindlist(chart_data_long[currentIndices])[grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
+                  ,aes(x = date
+                       ,ymin = measure
+                       ,ymax = measure
+                       ,colour = Variable
+                       ,fill = Variable)
+                  ,na.rm = TRUE
+                  ,size = line_width) 
     
     numFillsLegend <- rbindlist(chart_data_long[currentIndices])[,length(unique(Variable))]
   }
@@ -604,7 +687,7 @@ generateaWhereChart <- function(data
                     ,alpha = 0.3 # adjust transparency of SD DEV shading
                     ,linetype = "blank") 
     }
-   
+    
     
     numFillsLegend <- numFillsLegend + length(currentIndices)
   }
@@ -618,20 +701,20 @@ generateaWhereChart <- function(data
       chart <-
         chart +
         geom_ribbon(data = rbindlist(chart_data_long[currentIndices])
-                  ,aes(x = date
-                       ,ymin = measure
-                       ,ymax = measure
-                       ,colour = Variable
-                       ,fill = Variable)
-                  ,size = line_width
-                  #,linetype = linetypes[x] # change line type for sunsequent variables
-                  ) +
+                    ,aes(x = date
+                         ,ymin = measure
+                         ,ymax = measure
+                         ,colour = Variable
+                         ,fill = Variable)
+                    ,size = line_width
+                    #,linetype = linetypes[x] # change line type for sunsequent variables
+        ) +
         #we need to map the values back to the original scale for plotting on
         #the side if Multiple values were to exist for currentIndices they will
         #have the same info stored, hence we can take the first
         scale_y_continuous(sec.axis = sec_axis(~ scales::rescale(x = .
-                                                                    ,from= rangeToUse[[1]]
-                                                                    ,to = rangeToUse[currentIndices][[1]])
+                                                                 ,from= rangeToUse[[1]]
+                                                                 ,to = rangeToUse[currentIndices][[1]])
                                                ,name = unique(unlist(ylabel[currentIndices])))) 
       
       numFillsLegend <- numFillsLegend + rbindlist(chart_data_long[currentIndices])[,length(unique(Variable))]
@@ -677,13 +760,13 @@ generateaWhereChart <- function(data
       ,legend.direction= "horizontal"
       ,legend.title = element_blank()
       ,legend.spacing.x = unit(.1, 'cm'))  +
-      
+    
     
     # Reorder legend entries
     guides(
       fill = guide_legend(#ncol = numFillsLegend
-                           nrow = ceiling(length(chart_data_long)/2)
-                          ,order = 1), 
+        nrow = ceiling(length(chart_data_long)/2)
+        ,order = 1), 
       #colour = guide_legend(ncol =  numColorsLegend 
       #                      ,order = 2)) + 
       colour = FALSE) + 
@@ -706,7 +789,7 @@ generateaWhereChart <- function(data
     # main chart title 
     ggtitle(title) + # add  main title to the chart 
     theme(plot.title = element_text(size=size_font_main_title)) # main title font size  
-    #theme(legend.spacing.y = unit(-0.18, "cm"))
+  #theme(legend.spacing.y = unit(-0.18, "cm"))
   
   if (any(is.na(yAxisLimits)) == FALSE) {
     chart <- 
