@@ -55,7 +55,87 @@ generateaWhereDataset <- function(lat
 
   if (exists('awhereEnv75247') == FALSE) {
     stop('Please load credentials for aWhereAPI before continuing')
+  } else {
+    #Check to see if there is an object in memory from previous data pull.  This
+    #works because if the object is modified at all the mem reference will
+    #change
+    if (exists('memRef_generateaWhereDataset',where = awhereEnv75247,inherits = FALSE) == TRUE) {
+      
+      globalEnvVars <- ls(envir=.GlobalEnv)
+      memRef_GlobalEnvVars <-  
+        purrr::map_chr(globalEnvVars, ~ do.call(pryr::address,list(rlang::sym(.x))) ) %>%
+        data.table::data.table(variable = globalEnvVars,address = .)
+      
+      data.prevPull <- memRef_GlobalEnvVars[address == awhereEnv75247$memRef_generateaWhereDataset,variable]
+      
+      if (length(data.prevPull) > 0) {
+        
+        eval(parse(text = paste0('data.prevPull <- as.data.table(.GlobalEnv$',data.prevPull[1],')')))
+        prevDataPullInMemory <- TRUE
+        
+      } else {
+        prevDataPullInMemory <- FALSE
+      }
+    } else {
+      prevDataPullInMemory <- FALSE
+    }
   }
+  
+  #If there is a prev data pull in memoory, alter query to only fetch needed new data
+  if (prevDataPullInMemory == TRUE) {
+    #check to make sure they are pulling data for the same location
+    lat.prev <- unique(data.prevPull[,lat])
+    lon.prev <- unique(data.prevPull[,lon])
+    
+    if (length(lat.prev) > 1 | length(lon.prev) > 1) {
+      break
+    } else if (lat.prev != lat | lon.prev != lon) {
+      break
+    }
+    
+    dates.prev <- unique(data.prevPull[,date])
+    dates.current <- seq.Date(as.Date(day_start),as.Date(day_end),by = 'days')
+    
+    dates.current <- as.Date(setdiff(dates.current,dates.prev),origin = '1970-01-01')
+    
+    if (length(dates.current) == 0) {
+      return(data.prevPull)
+    } else {
+      
+      #check to make sure the user didn't just request a longer time period on
+      #the front and back end.  If so just request the new data as its more
+      #complicated to do the logic and it won't save API calls
+      
+      if (day.start < min(dates.prev) & day.end > max(dates.prev)) {
+        cat(paste0('You have requested data that extends both earlier and later in time than previous data 
+                    you have requested for the same location.  It would be more effecient to run this function twice,
+                    once for the earlier dates and again for the later.'))
+        makeAPICalls <- readline("Do you wish to proceed with the current request? Type yes to begin API calls: ")
+        
+        if (tolower(makeAPICalls) != 'yes') {
+          stop('User Input indicated they did not want to proceed with making API Calls \n')
+        }
+      }
+      
+      if (verbose == TRUE) {
+        cat(paste0('Appending newly requested data to previously pulled dataset for the same location.\n'))
+      }
+      
+      day_start <- dates.current[1]
+      day_end <- dates.current[length(dates.current)]
+      
+      #we need to reccreate these vars to do the proper sum.  I can do this
+      #because it is a data.table and therefor is being done by reference which
+      #wont change the memory address
+      
+      data.prevPull[,daily.accumulatedPrecipitation.stdDev := c(NA,diff(accumulatedPrecipitation.stdDev))]
+      data.prevPull[,daily.accumulatedPet.stdDev := c(NA,diff(accumulatedPet.stdDev))]
+      data.prevPull[,daily.accumulatedPpet.stdDev := c(NA,diff(accumulatedPpet.stdDev))]
+      data.prevPull[,daily.accumulatedGdd.stdDev:= c(NA,diff(accumulatedGdd.stdDev))]
+      
+    }
+  }
+  
   
   day_start <- as.character(day_start)
   day_end <- as.character(day_end)
@@ -450,7 +530,6 @@ generateaWhereDataset <- function(lat
   
   weather_full.names <- unique(c(colnames(obs), colnames(ag), colnames(obs_ltn), colnames(ag_ltn)))
   
-
   
   #This is meant to add the forecast data to the observed columns
   
@@ -541,7 +620,26 @@ generateaWhereDataset <- function(lat
   weather_full[,c('temperatures.mean.average'
                   ,'temperatures.mean.stdDev'
                   ,'wind.morningMax.amount') := NULL]
+  
+  #APPEND IN THE DATA FROM THE PREVIOUS PULL
 
+
+  
+  if (prevDataPullInMemory == TRUE) {
+    weather_full <- rbind(weather_full
+                          ,data.prevPull
+                          ,use.names = TRUE)
+    
+    setkey(weather_full,date)
+    weather_full <- unique(weather_full, by = 'date')
+    
+    #These calcs need to be redone because the data could have changed
+    ag[,accumulatedGdd.amount           := cumsum(gdd.amount)]
+    ag[,accumulatedPpet.amount          := cumsum(ppet.amount)]
+    ag[,accumulatedPrecipitation.amount := cumsum(precipitation.amount)]
+    ag[,accumulatedPet.amount           := cumsum(pet.amount)]
+  }
+  
   #For queries that go for more than a year the only way to get accumulated
   #amounts correct is to join back to the original datasets because the API
   #can't return the correct data
@@ -561,7 +659,7 @@ generateaWhereDataset <- function(lat
   weather_full[daily.accumulatedPpet.stdDev < 0, daily.accumulatedPpet.stdDev := 0]
   weather_full[daily.accumulatedGdd.stdDev < 0, daily.accumulatedGdd.stdDev := 0]
   
-  weather_full[,accumulatedPrecipitation.stdDev := cumsum(daily.accumulatedPrecipitation.stdDev )]
+  weather_full[,accumulatedPrecipitation.stdDev := cumsum(daily.accumulatedPrecipitation.stdDev)]
   weather_full[,accumulatedPet.stdDev := cumsum(daily.accumulatedPet.stdDev)]
   weather_full[,accumulatedPpet.stdDev := cumsum(daily.accumulatedPpet.stdDev)]
   weather_full[,accumulatedGdd.stdDev:= cumsum(daily.accumulatedGdd.stdDev)]
@@ -576,6 +674,19 @@ generateaWhereDataset <- function(lat
     cat(paste0('    Process Complete \n\n'))
   }
   
-
+  #Save Memory Reference of Object to the aWhereEnv
+  if (exists('memRef_generateaWhereDataset',where = awhereEnv75247,inherits = FALSE) == TRUE) {
+    if (bindingIsLocked('memRef_generateaWhereDataset',awhereEnv75247) == TRUE) {
+      unlockBinding('memRef_generateaWhereDataset',awhereEnv75247)
+    }
+  }
+  
+  var.memRef <- 'weather_full'
+  awhereEnv75247$memRef_generateaWhereDataset <-  
+    purrr::map_chr(var.memRef, ~ do.call(pryr::address,list(rlang::sym(.x))))
+  
+  lockBinding('memRef_generateaWhereDataset'
+              ,awhereEnv75247)
+  
   return(weather_full)
 }
