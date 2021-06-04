@@ -117,13 +117,10 @@ generateaWhereDataset <- function(lat
         }
       }
       
-<<<<<<< HEAD
       if (verbose == TRUE) {
         cat(paste0('Appending newly requested data to previously pulled dataset for the same location.\n'))
       }
       
-=======
->>>>>>> c3d19389c405065b34eaeee3b467da30f57214f4
       day_start <- dates.current[1]
       day_end <- dates.current[length(dates.current)]
       
