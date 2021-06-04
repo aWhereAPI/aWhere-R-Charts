@@ -148,3 +148,36 @@ generateColorScale <- function(fig
   return(list(colorScale = colorScaleToUse,fillScale = fillScaleToUse))
   
 }
+
+#' @title loadVarMemRef_aWhereEnv 
+#'
+#' @description
+#' \code{loadVarMemRef_aWhereEnv} load the data object stored at a specific memory address
+#'
+#' @details
+#' load the data object stored at a specific memory address
+#'
+#' @param memAddress
+#' @return  
+#'
+#' @examples
+#' 
+loadVarMemRef_aWhereEnv <- function(memAddress) {
+  
+  globalEnvVars <- ls(envir=.GlobalEnv)
+  memRef_GlobalEnvVars <-  
+    purrr::map_chr(globalEnvVars, ~ do.call(pryr::address,list(rlang::sym(.x))) ) %>%
+    data.table::data.table(variable = globalEnvVars,address = .)
+  
+  out <- memRef_GlobalEnvVars[address == memAddress,variable]
+  
+  if (length(out) > 0) {
+    
+    return(eval(parse(text = paste0('as.data.table(.GlobalEnv$',out[1],')'))))
+  
+  } else {
+    return(NULL)
+  }
+}
+
+
