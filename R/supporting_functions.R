@@ -180,4 +180,33 @@ loadVarMemRef_aWhereEnv <- function(memAddress) {
   }
 }
 
+bootstrapByYear <- function(data
+                            ,years.LTN) {
+  
+  seasonsPresent <- unique(data[lubridate::year(date) %in% years.LTN,seasonNumber])
+  out <- list()
+  
+  for (x in 1:length(seasonsPresent)) {
+    seasonsToInclude <- setdiff(seasonsPresent,seasonsPresent[x])
+    
+    bob1 <- data[seasonNumber %in% seasonsToInclude,sd(tempIndex.amount),by = 'day']
+    bob2 <- data[seasonNumber %in% seasonsToInclude,mean(tempIndex.amount), by = 'day']
+    
+    bob <- merge(bob1,bob2,by = 'day')
+    setnames(bob,c('day','SD','average'))
+    bob[,seasonNumber := seasonsPresent[x]]
+    
+    out[[x]] <- bob
+  
+  }
+  
+  out <- rbindlist(out)
+  out <- out[,list(mean(SD),mean(average)),by = 'day']
+  setnames(out,c('day','tempIndex.stdDev','tempIndex.average'))
+  data <- merge(data,out,by = 'day')
+  
+  setkey(data,date)
+  
+  return(data)
+}
 

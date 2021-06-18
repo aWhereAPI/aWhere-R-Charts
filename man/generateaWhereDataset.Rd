@@ -11,7 +11,8 @@ generateaWhereDataset(
   day_end,
   year_start,
   year_end,
-  verbose = TRUE
+  verbose = TRUE,
+  appendPrevDataPull = TRUE
 )
 }
 \arguments{
@@ -19,35 +20,43 @@ generateaWhereDataset(
 
 \item{lon}{numeric longitude point in decimal degrees (required)}
 
-\item{day_start}{character string in YYYY-MM-DD format,
-denoting the first day for which you want weather data retrieved  (required)}
+\item{day_start}{character string in YYYY-MM-DD format, denoting the first
+day for which you want weather data retrieved  (required)}
 
-\item{day_end}{character string in YYYY-MM-DD format,
-denoting the last day for which you want weather data retrieved  (required)}
+\item{day_end}{character string in YYYY-MM-DD format, denoting the last day
+for which you want weather data retrieved  (required)}
 
-\item{year_start}{numeric in YYYY format, denoting the first year
-of data which should be included in the norms calculation.  (required)}
+\item{year_start}{numeric in YYYY format, denoting the first year of data
+which should be included in the norms calculation.  (required)}
 
-\item{year_end}{numeric in YYYY format, denoting the last year
-of data which should be included in the norms calculation (required)}
+\item{year_end}{numeric in YYYY format, denoting the last year of data which
+should be included in the norms calculation (required)}
+
+\item{verbose}{print additional diagnostic messages during runtime (optional)}
+
+\item{appendPrevDataPull}{disable behavior for R to request and append only
+novel data for the current location but instead to create data object fresh
+at all times (optional)}
 }
 \value{
 dataframe
 }
 \description{
-\code{generateaWhereDataset} Generate a basic aWhere weather dataset for a given point and timespan.
+\code{generateaWhereDataset} Generate a basic aWhere weather
+  dataset for a given point and timespan.
 }
 \details{
-This function returns an organized dataset from the aWhere API with a pre-set list
-of variables for the given coordinates and spanning the entire input datespan, which
-can include forecasted dates. Forecast data will be returned in 24-hour/1-day blocks,
-in order to be harmonious with the past observed data. The pre-set variables include
-temperature, rainfall, PET, P/PET, GDDs, and variable accumulations. The pre-set list
-is not customizable. Users who wish to investigate other variables returned by the
-aWhere API - like humidity, solar radiation, and more - should use the base functions
-provided in the aWhereAPI package. This function is intended to get a user started
-with retrieving data and analyzing it quickly, without the need for making multiple
-function calls or merging the results.
+This function returns an organized dataset from the aWhere API with
+  a pre-set list of variables for the given coordinates and spanning the
+  entire input datespan, which can include forecasted dates. Forecast data
+  will be returned in 24-hour/1-day blocks, in order to be harmonious with
+  the past observed data. The pre-set variables include temperature,
+  rainfall, PET, P/PET, GDDs, and variable accumulations. The pre-set list is
+  not customizable. Users who wish to investigate other variables returned by
+  the aWhere API - like humidity, solar radiation, and more - should use the
+  base functions provided in the aWhereAPI package. This function is intended
+  to get a user started with retrieving data and analyzing it quickly,
+  without the need for making multiple function calls or merging the results.
 }
 \examples{
 \dontrun{generateaWhereDataset(lat = 30.685
