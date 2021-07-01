@@ -70,9 +70,10 @@
 #' @examples
 #' \dontrun{generateAndPlotClimateIndex(data = weather_df
 #'                                      ,variable = "seasonTotalPrecip"
+#'                                      ,startYearOfSeasonToPlot = 2020
 #'                                      ,season.monthDay_start = '09-01'
 #'                                      ,season.monthDay_end = '11-30'
-#'                                      ,years.LTN = seq(2010,2020,1)
+#'                                      ,years.LTN = seq(2010,2019,1)
 #'                                      ,e_precip = TRUE
 #'                                      ,e_threshold = 10
 #'                                      ,doRoll = TRUE)}
@@ -152,7 +153,7 @@ generateAndPlotClimateIndex <- function(data
   ############################################################################
   #Logic for making sure we get all the needed daily data
   yearsPresent <- dataToUse[,unique(lubridate::year(date))]
-  yearsNeeded <- sort(unique(c(years.plotsIndex,years.LTN)))
+  yearsNeeded <- sort(unique(c(yearsPresent,years.LTN)))
   
   #handles data that goes over Jan 1st
   if (paste0('2020-',season.monthDay_start) > paste0('2020-',season.monthDay_end)) {
