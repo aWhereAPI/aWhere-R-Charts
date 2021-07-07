@@ -1,6 +1,6 @@
 Package: aWhereCharts
 Title: Make Charts using output from aWhere API
-Version: 0.6.11
+Version: 0.8.01
 Author: 
     c(person("Technical", "Support", ,"technicalsupport@awhere.com", role = c("aut","cre","ctb")))
 Description: 
@@ -23,7 +23,9 @@ Imports:
     zoo,
     data.table (>= 1.12.0),
     lubridate,
-    scales
+    scales,
+    purrr,
+    pryr
 Suggests: 
     knitr,
     rmarkdown

@@ -148,3 +148,65 @@ generateColorScale <- function(fig
   return(list(colorScale = colorScaleToUse,fillScale = fillScaleToUse))
   
 }
+
+#' @title loadVarMemRef_aWhereEnv 
+#'
+#' @description
+#' \code{loadVarMemRef_aWhereEnv} load the data object stored at a specific memory address
+#'
+#' @details
+#' load the data object stored at a specific memory address
+#'
+#' @param memAddress
+#' @return  
+#'
+#' @examples
+#' 
+loadVarMemRef_aWhereEnv <- function(memAddress) {
+  
+  globalEnvVars <- ls(envir=.GlobalEnv)
+  memRef_GlobalEnvVars <-  
+    purrr::map_chr(globalEnvVars, ~ do.call(pryr::address,list(rlang::sym(.x))) ) %>%
+    data.table::data.table(variable = globalEnvVars,address = .)
+  
+  out <- memRef_GlobalEnvVars[address == memAddress,variable]
+  
+  if (length(out) > 0) {
+    
+    return(eval(parse(text = paste0('as.data.table(.GlobalEnv$',out[1],')'))))
+  
+  } else {
+    return(NULL)
+  }
+}
+
+bootstrapByYear <- function(data
+                            ,years.LTN) {
+  
+  seasonsPresent <- unique(data[lubridate::year(date) %in% years.LTN,seasonNumber])
+  out <- list()
+  
+  for (x in 1:length(seasonsPresent)) {
+    seasonsToInclude <- setdiff(seasonsPresent,seasonsPresent[x])
+    
+    bob1 <- data[seasonNumber %in% seasonsToInclude,sd(tempIndex.amount),by = 'day']
+    bob2 <- data[seasonNumber %in% seasonsToInclude,mean(tempIndex.amount), by = 'day']
+    
+    bob <- merge(bob1,bob2,by = 'day')
+    setnames(bob,c('day','SD','average'))
+    bob[,seasonNumber := seasonsPresent[x]]
+    
+    out[[x]] <- bob
+  
+  }
+  
+  out <- rbindlist(out)
+  out <- out[,list(mean(SD),mean(average)),by = 'day']
+  setnames(out,c('day','tempIndex.stdDev','tempIndex.average'))
+  data <- merge(data,out,by = 'day')
+  
+  setkey(data,date)
+  
+  return(data)
+}
+
