@@ -152,8 +152,10 @@ generateAndPlotClimateIndex <- function(data
   
   ############################################################################
   #Logic for making sure we get all the needed daily data
-  yearsPresent <- dataToUse[,unique(lubridate::year(date))]
-  yearsNeeded <- sort(unique(c(yearsPresent,years.LTN)))
+  #yearsPresent <- dataToUse[,unique(lubridate::year(date))]
+  #yearsNeeded <- sort(unique(c(yearsPresent,years.LTN)))
+  
+  yearsNeeded <- sort(unique(years.LTN,startYearOfSeasonToPlot))
   
   #handles data that goes over Jan 1st
   if (paste0('2020-',season.monthDay_start) > paste0('2020-',season.monthDay_end)) {
@@ -171,6 +173,8 @@ generateAndPlotClimateIndex <- function(data
   }
   
   allDaysNeeded <- as.Date(unlist(allDaysNeeded.list),origin = '1970-01-01')
+  
+  allDaysNeeded <- allDaysNeeded[allDaysNeeded <= (Sys.Date() + 13)])
   
   if (length(setdiff(allDaysNeeded,dataToUse[,date])) > 0) {
     cat(paste0('This function requires the daily data over all years the index is to be calculated for. This function
@@ -1085,8 +1089,9 @@ generateAndPlotClimateIndex <- function(data
   ####################################################################################################
   
   if (is.null(title)) {
-    title <-  paste0(paste0(longname,collapse = ' &\n'), 
-                     "\nfrom ", min(dataToUse$date), " to ", max(dataToUse$date),
+    title <-  paste0(paste0(longname,collapse = ' &\n'),
+                     "\nCurrent Year is",startYearOfSeasonToPlot,
+                    # "\nfrom ", min(dataToUse$date), " to ", max(dataToUse$date),
                      '\nLTN calculated between ',min(years.LTN),' and ',max(years.LTN))
     
     if (exists('index.title') == TRUE) {
@@ -1105,9 +1110,9 @@ generateAndPlotClimateIndex <- function(data
                         ,e_threshold = e_threshold
                         ,doRoll = doRoll
                         ,rolling_window = rolling_window
-                        ,includeSTD = FALSE
+                        ,includeSTD = includeSTD
                         ,mainGraphType = mainGraphType
-                        ,daysToAggregateOver = NULL
+                        ,daysToAggregateOver = daysToAggregateOver
                         ,yAxisLimits = yAxisLimits
                         ,indexSpecificValue = indexSpecificValue
                         ,isIndex = TRUE)
