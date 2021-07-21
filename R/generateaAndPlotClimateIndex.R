@@ -174,7 +174,7 @@ generateAndPlotClimateIndex <- function(data
   
   allDaysNeeded <- as.Date(unlist(allDaysNeeded.list),origin = '1970-01-01')
   
-  allDaysNeeded <- allDaysNeeded[allDaysNeeded <= (Sys.Date() + 13)])
+  allDaysNeeded <- allDaysNeeded[allDaysNeeded <= (Sys.Date() + 13)]
   
   if (length(setdiff(allDaysNeeded,dataToUse[,date])) > 0) {
     cat(paste0('This function requires the daily data over all years the index is to be calculated for. This function
