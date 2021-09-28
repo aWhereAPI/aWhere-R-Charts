@@ -368,7 +368,7 @@ generateaWhereDataset <- function(lat
                                                                 ,monthday_end = monthday_end
                                                                 ,year_start = year_start
                                                                 ,year_end = year_end
-                                                                ,includeFeb29thData = FALSE)) %>%
+                                                                ,includeFeb29thData = TRUE)) %>%
       data.table::as.data.table(.)
   
     obs_ltn.names <- colnames(obs_ltn)
@@ -394,7 +394,7 @@ generateaWhereDataset <- function(lat
                                                                  ,month_day_end = monthday_end
                                                                  ,year_start = year_start
                                                                  ,year_end = year_end
-                                                                 ,includeFeb29thData = FALSE)) %>%
+                                                                 ,includeFeb29thData = TRUE)) %>%
       data.table::as.data.table(.)
     
     ag_ltn.names <- colnames(ag_ltn)
