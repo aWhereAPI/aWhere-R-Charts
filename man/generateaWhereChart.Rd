@@ -19,8 +19,7 @@ generateaWhereChart(
   mainGraphType = "line",
   daysToAggregateOver = NULL,
   yAxisLimits = NA,
-  indexSpecificValue = NULL,
-  isIndex = FALSE
+  indexSpecificValue = NULL
 )
 }
 \arguments{
@@ -69,10 +68,6 @@ must be a two element vector of the form c(minValue, maxValue) (optional)}
 
 \item{indexSpecificValue}{For the Climate Indices this tool can plot the user
 can ovveride the default value of the index using this parameter (optional)}
-
-\item{isIndex}{Specifies if the data to be plotted is an index that has been
-calculated outside of this function and the data processing logic in this
-function should be bypassed (optional)}
 
 \item{maingraphType}{Which type of graph to make for the main plot.  Valid
 values are "line" and "bar" (optional)}

@@ -1,6 +1,6 @@
 Package: aWhereCharts
 Title: Make Charts using output from aWhere API
-Version: 0.8.03
+Version: 0.8.04
 Author: 
     c(person("Technical", "Support", ,"technicalsupport@awhere.com", role = c("aut","cre","ctb")))
 Description: 

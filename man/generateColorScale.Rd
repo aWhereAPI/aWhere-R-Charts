@@ -7,7 +7,11 @@
 generateColorScale(fig, add.years, add.years.colors)
 }
 \arguments{
-\item{add.years.colors}{}
+\item{fig}{ggplot figure}
+
+\item{add.years}{years to add to plot}
+
+\item{add.years.colors}{explicit colors for each year}
 }
 \value{
 

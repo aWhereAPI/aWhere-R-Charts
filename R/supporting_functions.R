@@ -96,9 +96,9 @@ formatGraphTitleForFileName <- function(title) {
 #' @details
 #' #used to generate colorscheme when additional years are added to graph
 #'
-#' @param fig
-#' @param add.years
-#' @param add.years.colors
+#' @param fig ggplot figure
+#' @param add.years years to add to plot
+#' @param add.years.colors explicit colors for each year
 #'
 #' @return  
 #'
@@ -157,7 +157,7 @@ generateColorScale <- function(fig
 #' @details
 #' load the data object stored at a specific memory address
 #'
-#' @param memAddress
+#' @param memAddress address of object in memory
 #' @return  
 #'
 #' @examples

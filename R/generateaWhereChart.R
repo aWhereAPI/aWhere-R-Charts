@@ -58,9 +58,6 @@
 #'   must be a two element vector of the form c(minValue, maxValue) (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
 #'   can ovveride the default value of the index using this parameter (optional)
-#' @param isIndex Specifies if the data to be plotted is an index that has been
-#'   calculated outside of this function and the data processing logic in this
-#'   function should be bypassed (optional)
 #'
 #' @import tidyr
 #' @import dplyr
@@ -69,6 +66,7 @@
 #' @import zoo
 #' @import data.table
 #' @import scales
+#' @import ggpmisc
 #'
 #' @return plot object
 #'
@@ -95,8 +93,7 @@ generateaWhereChart <- function(data
                                 ,mainGraphType = 'line'
                                 ,daysToAggregateOver = NULL
                                 ,yAxisLimits = NA
-                                ,indexSpecificValue = NULL
-                                ,isIndex = FALSE) {
+                                ,indexSpecificValue = NULL) {
   
   
   #We are using a list consturct to hold all variables so we can loop over its length
@@ -137,9 +134,11 @@ generateaWhereChart <- function(data
   
   variable <- as.list(copy(temp_variable))
   
-  if (is.na(variable_rightAxis)) {
-    variable_rightAxis <- NULL
-  }
+  try(
+      if (is.na(variable_rightAxis)) {
+        variable_rightAxis <- NULL
+      },silent = TRUE
+  )
   
   if (is.null(variable_rightAxis) == FALSE) {
     variable <- c(variable,as.list(copy(variable_rightAxis)))
@@ -454,23 +453,23 @@ generateaWhereChart <- function(data
                                               ,FUN = mean
                                               ,na.rm = TRUE
                                               ,fill = NA)]
-    }
     
-    #Choice of columns is arbitrary as they all have the same rolling window
-    if (nrow(chart_data[[x]][!is.na(Current),]) > 0) {
-      chart_data[[x]] <- chart_data[[x]][!is.na(Current),]
-      warning('Rolling Aggregation Performed; Truncating data to date range with complete data\n')
-    }
-    
-    #If EffectiveCurrent is the same as non adjusted slightly increase so both lines show on graph
-    if ((any(grepl(pattern = 'EffectiveCurrent'
-                   ,x = colnames(chart_data[[x]])
-                   ,fixed = TRUE)) & mainGraphType == 'line') == TRUE) {
-      if (all(chart_data[[x]][,Current == EffectiveCurrent]) == TRUE) {
-        chart_data[[x]][,EffectiveCurrent := EffectiveCurrent - .1]
+      #Choice of columns is arbitrary as they all have the same rolling window
+      if (nrow(chart_data[[x]][!is.na(Current),]) > 0) {
+        chart_data[[x]] <- chart_data[[x]][!is.na(Current),]
+        warning('Rolling Aggregation Performed; Truncating data to date range with complete data\n')
+      }
+      
+      #If EffectiveCurrent is the same as non adjusted slightly increase so both lines show on graph
+      if ((any(grepl(pattern = 'EffectiveCurrent'
+                     ,x = colnames(chart_data[[x]])
+                     ,fixed = TRUE)) & mainGraphType == 'line') == TRUE) {
+        if (all(chart_data[[x]][,Current == EffectiveCurrent]) == TRUE) {
+          chart_data[[x]][,EffectiveCurrent := EffectiveCurrent - .1]
+        }
       }
     }
-    
+  
     if (length(variable) > 1) {
       #Add identifying variable information to variable names
       variableNames[[x]][-1] <- paste0(variableNames[[x]][-1],'-',variable[[x]])
@@ -479,9 +478,17 @@ generateaWhereChart <- function(data
                ,setdiff(colnames(chart_data[[x]])[-1],c('ymin','ymax'))
                ,paste0(setdiff(colnames(chart_data[[x]])[-1],c('ymin','ymax')),'-',variable[[x]]))
     }
-    
-    #convert character date column to Date
-    chart_data[[x]][,date :=as.Date(date)]
+
+    #If the date column is a date we want to cast it to a date object.  If the date column is just years don't
+    if (all(chart_data[[x]][,grepl('^\\d{4}$',date)]) == FALSE) {
+      #convert character date column to Date
+      chart_data[[x]][,date :=as.Date(date)]
+      isTrendLine <- FALSE
+    } else {
+      variableNames[[x]] <- setdiff(variableNames[[x]],'LTN')
+      isTrendLine <- TRUE
+    }
+
     
     #change data format from wide to long
     chart_data_long[[x]] <- 
@@ -572,6 +579,10 @@ generateaWhereChart <- function(data
                                                 ,"#ffaa00" #  effective current var #3 light orange 
                                                 ,"#9933ff")) # LTN var #  - purple
     }
+    
+    if (isTrendLine == TRUE) {
+      colorScheme[[q]] <- colorScheme[[q]][!grep('LTN',variable)]
+    }
   }
   
   for (x in 1:length(chart_data_long)) {
@@ -619,10 +630,11 @@ generateaWhereChart <- function(data
   
   currentIndices <- which(ylabel == ylabel_unique[1])
   
+  dataToPlot <- rbindlist(chart_data_long[currentIndices])
   #make chart based on appropriate graph type
   chart <- 
-    ggplot(data = rbindlist(chart_data_long[currentIndices])
-           ,aes(x = date)
+    ggplot(data = dataToPlot
+           ,aes(x = date,y = measure)
            ,na.rm = TRUE)
   
   if (mainGraphType == 'line') {
@@ -720,24 +732,6 @@ generateaWhereChart <- function(data
     # plot theme: https://ggplot2.tidyverse.org/reference/ggtheme.html
     theme_bw() + 
     
-    # format the text color, size, angle, and face for x- and y- axes. 
-    # x-axis labels 
-    theme(axis.text.x = element_text(color = "grey20", # font color 
-                                     size = size_font_axis_labels, # font size 
-                                     angle = 45,       # font angle 
-                                     hjust = 1,        # horizontal adjustment
-                                     face = "plain"),  # font type "plain", "bold" 
-          # y-axis labels 
-          axis.text.y = element_text(color = "grey20", 
-                                     size = size_font_axis_labels, 
-                                     face = "plain"),
-          # y-axis titles 
-          axis.title.y = element_text(color = "grey20", 
-                                      size = size_font_axis_titles, 
-                                      face = "bold"),
-          # turn off the x-axis title 
-          axis.title.x=element_blank()) + 
-    
     # format the legend 
     theme(
       # legend on RIGHT side of chart with items stacked vertically ---
@@ -752,35 +746,86 @@ generateaWhereChart <- function(data
       ,legend.title = element_blank()
       ,legend.spacing.x = unit(.1, 'cm'))  +
     
-    
-    # Reorder legend entries
-    guides(
-      fill = guide_legend(#ncol = numFillsLegend
-        nrow = ceiling(length(chart_data_long)/2)
-        ,order = 1), 
-      #colour = guide_legend(ncol =  numColorsLegend 
-      #                      ,order = 2)) + 
-      colour = FALSE) + 
-    
-    
-    # Original legend formatting 
-    #guides(colour = guide_legend(nrow = length(chart_data_long),
-    #                             byrow = FALSE),
-    #       fill = guide_legend(nrow = nRowsFill,
-    #                           byrow = FALSE)) + 
-    
-    # set the y-axis labels 
-    labs(y = ylabel[[1]]) + 
-    
-    # the next two lines may be commented out if the vertical current date line 
-    # is not desired
-    geom_vline(xintercept = as.numeric(Sys.Date())
-               ,linetype = "dashed") +
-    
     # main chart title 
     ggtitle(title) + # add  main title to the chart 
     theme(plot.title = element_text(size=size_font_main_title)) # main title font size  
   #theme(legend.spacing.y = unit(-0.18, "cm"))
+  
+  if (isTrendLine == FALSE) {
+    # the next two lines may be commented out if the vertical current date line 
+    # is not desired
+    chart <- 
+      chart + 
+      geom_vline(xintercept = as.numeric(Sys.Date())
+               ,linetype = "dashed") +
+      # Reorder legend entries
+      guides(
+        fill = guide_legend(#ncol = numFillsLegend
+          nrow = ceiling(length(chart_data_long)/2)
+          ,order = 1), 
+        #colour = guide_legend(ncol =  numColorsLegend 
+        #                      ,order = 2)) + 
+        colour = 'none') + 
+      # set the y-axis labels 
+      labs(y = ylabel[[1]]) + 
+      # format the text color, size, angle, and face for x- and y- axes. 
+      # x-axis labels 
+      theme(axis.text.x = element_text(color = "grey20", # font color 
+                                       size = size_font_axis_labels, # font size 
+                                       angle = 45,       # font angle 
+                                       hjust = 1,        # horizontal adjustment
+                                       face = "plain"),  # font type "plain", "bold" 
+            # y-axis labels 
+            axis.text.y = element_text(color = "grey20", 
+                                       size = size_font_axis_labels, 
+                                       face = "plain"),
+            # y-axis titles 
+            axis.title.y = element_text(color = "grey20", 
+                                        size = size_font_axis_titles, 
+                                        face = "bold"),
+            # turn off the x-axis title 
+            axis.title.x=element_blank()) 
+  } else {
+    yearsPresent <- dataToPlot[,unique(date)]
+    
+    chart <- 
+      chart +
+      # Reorder legend entries
+      guides(
+        fill = 'none', 
+        colour = 'none') +
+      scale_x_continuous(breaks=yearsPresent[seq(1,length(yearsPresent),2)]) +
+      # set the y-axis labels 
+      labs(y = ylabel[[1]]
+           ,x = 'Year') + 
+      # format the text color, size, angle, and face for x- and y- axes. 
+      # x-axis labels 
+      theme(axis.text.x = element_text(color = "grey20", # font color 
+                                       size = size_font_axis_labels, # font size 
+                                       angle = 45,       # font angle 
+                                       hjust = 1,        # horizontal adjustment
+                                       face = "plain"),  # font type "plain", "bold" 
+            # y-axis labels 
+            axis.text.y = element_text(color = "grey20", 
+                                       size = size_font_axis_labels, 
+                                       face = "plain"),
+            # y-axis titles 
+            axis.title.y = element_text(color = "grey20", 
+                                        size = size_font_axis_titles, 
+                                        face = "bold"),
+            # x-axis titles 
+            axis.title.x = element_text(color = "grey20", 
+                                        size = size_font_axis_titles, 
+                                        face = "bold")) +
+      stat_smooth(method=lm, se = FALSE) +
+      stat_fit_glance(method = 'lm',
+                      label.y = "top",
+                      method.args = list(formula = y ~ x),
+                      mapping = aes(label = sprintf('italic(P)~"="~%.2g',
+                                                    stat(p.value))),
+                      parse = TRUE,
+                      size = 5)
+  }
   
   if (any(is.na(yAxisLimits)) == FALSE) {
     chart <- 

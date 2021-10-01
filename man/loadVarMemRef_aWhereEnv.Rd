@@ -6,6 +6,9 @@
 \usage{
 loadVarMemRef_aWhereEnv(memAddress)
 }
+\arguments{
+\item{memAddress}{address of object in memory}
+}
 \value{
 
 }

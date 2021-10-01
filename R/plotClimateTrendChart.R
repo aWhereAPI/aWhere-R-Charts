@@ -1,13 +1,13 @@
-#' @title generateAndPlotClimateIndex
+#' @title plotClimateTrendChart
 #'
-#' @description \code{generateAndPlotClimateIndex} Generate a plot using aWhere weather
-#' data with standardized formatting.
+#' @description \code{plotClimateTrendChart} Generate a trendline chart across multiple growing seasons
+#' using aWhere weather data with standardized formatting of a prefedined set of climate indices
 #'
 #' @details This function extends the aWhere charts package to plot the ETCCDI climate
-#' change indices (reference below).  Most indices are implement with the default behavior 
+#' change indices (reference below).  Most indices are implement3e with the default behavior 
 #' described int he publication.  Default values of the indices can be overriden using the 
-#' "indexSpecificValue" parameter.  Can also plot all attributes from aWhereCharts functiona
-#' and create plots combinging both sets of information.
+#' "indexSpecificValue" parameter. Applies a summary statistic over each year/season of data and then fits
+#' trend line to that data across all LTN years
 #' 
 #' Also has helper functions including to automatically (with user permission) download missing
 #' but needed data and store in the aWhereEnv to persist it throughout a user R session.
@@ -25,15 +25,6 @@
 #'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd as well as 
 #'   accumulatedPet, accumulatedPpet,accumulatedPrecipitation, gdd, pet, precipitation, maxRH, minRH,
 #'   solar,averageWind,dayMaxWind, rollingavgppet, maxTemp, minTemp, dayMaxWind, averageWind
-#' @param variable_rightAxis  What variable to plot over the primary variable.
-#'   The right y-axis of the plot will be used to present its range. Note that
-#'   it will always be plotted as a line chart. Same valid values as the
-#'   variable param.  (optional)
-#' @param startYearOfSeasonToPlot Specify the start year of the "season" you want
-#'   plotted for the current time period.  For example if you specify 2020 here and
-#'   season.monthDay_start is '08-01' and season.monthDay_end is '12-15' the current
-#'   time period will begin on '2020-01-01' and end on '2020-12-15'.  Dates will be
-#'   adjusted properly if the season goes over Jan 1st.
 #' @param season.monthDay_start Specify the start month-day combination of the "season"
 #'   you want analyzed (optional)
 #' @param season.monthDay_end Specify the end month-day combination of the "season"
@@ -49,13 +40,6 @@
 #' @param doRoll apply a rolling average to the calculation.
 #' @param rolling_window numeric value for the number of days to use in rolling
 #'   average calculations.  Default value is 30. (optional)
-#' @param includeSTD whether to plot the standard deviation as a ribbon around
-#'   the LTN value of the main variable. (optional)
-#' @param maingraphType Which type of graph to make for the main plot.  Valid
-#'   values are "line" and "bar" (optional)
-#' @param daysToAggregateOver Used to temporally aggregate data.  Unit is in
-#'   days. This is done based on the startdate of the dataset, not a calendar
-#'   week (otpional)
 #' @param yAxisLimits Used to set the limits of the y axis explicitly.  If used,
 #'   must be a two element vector of the form c(minValue, maxValue) (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
@@ -79,24 +63,17 @@
 #'
 #' @export
 
-generateAndPlotClimateIndex <- function(data
-                                      ,variable
-                                      ,variable_rightAxis = NULL
-                                      ,startYearOfSeasonToPlot
-                                      ,season.monthDay_start = '01-01'
-                                      ,season.monthDay_end = '12-31'
-                                      ,years.LTN = seq(2006,2020,1)
-                                      ,title = NULL
-                                      ,e_precip = FALSE 
-                                      ,e_threshold = 35 
-                                      ,doRoll = FALSE
-                                      ,rolling_window = 30
-                                      ,includeSTD = FALSE
-                                      ,mainGraphType = 'line'
-                                      ,daysToAggregateOver = NULL
-                                      ,yAxisLimits = NA
-                                      ,indexSpecificValue = NULL) {
-  
+plotClimateTrendChart <- function(data
+                                  ,variable
+                                  ,season.monthDay_start = '01-01'
+                                  ,season.monthDay_end = '12-31'
+                                  ,years.LTN = seq(2006,2020,1)
+                                  ,title = NULL
+                                  ,e_precip = FALSE 
+                                  ,e_threshold = 35 
+                                  ,yAxisLimits = NA
+                                  ,indexSpecificValue = NULL) {
+
   #because we are going to change the datastructure and it is a data.table we
   #will explicitly copy what is passed in so it doesn't violate user's scoping
   #expectations 
@@ -105,8 +82,7 @@ generateAndPlotClimateIndex <- function(data
   out.list <- 
     processClimateIndices(dataToUse = dataToUse
                           ,variable = variable
-                          ,variable_rightAxis = variable_rightAxis
-                          ,startYearOfSeasonToPlot = startYearOfSeasonToPlot
+                          ,variable_rightAxis = NULL
                           ,season.monthDay_start = season.monthDay_start
                           ,season.monthDay_end = season.monthDay_end
                           ,years.LTN = years.LTN
@@ -123,22 +99,29 @@ generateAndPlotClimateIndex <- function(data
   rm(out.list)
   gc()
   
+  #Decide on which summary statistic to apply
+  summaryStatistic.use <- returnAppropriateSummaryStatistic(variable.all)
+  
+  #NEED TO IMPLEMENT THE RIGHT AXIS OPTION
+  
+  eval(parse(text = paste0('tempData <- dataToUse[,',summaryStatistic.use,'(',variable.all[1],'.amount,na.rm = TRUE),by = c(\'seasonNumber\',\'seasonNumber_startYear\')]')))
+  setnames(tempData,c('V1','seasonNumber_startYear'),c(paste0(variable.all[1],'.amount'),'date'),skip_absent = TRUE)
+  
+  eval(parse(text = paste0('tempData[,',variable.all[1],'.average := NA]')))
+  eval(parse(text = paste0('tempData[,',variable.all[1],'.stdDev := NA]')))
+  
+  title <- gsub(pattern = 'Current Year is \\d{4}\n',replacement = '',title)
+  title <- gsub(pattern = 'LTN calculated between \\d{4} and \\d{4}', replacement = 'Data Summarized by Season Start Year',title)
+  
   out <-
-    generateaWhereChart(data = dataToUse
+    generateaWhereChart(data = tempData
                         ,variable = variable.all[1]
-                        ,variable_rightAxis = variable.all[2]
-                        ,day_start = paste0(startYearOfSeasonToPlot,'-',season.monthDay_start)
-                        ,day_end = paste0(startYearOfSeasonToPlot + year.increment,'-',season.monthDay_end)
+                        ,variable_rightAxis = NA
                         ,title = title
                         ,e_precip = FALSE # already done above
-                        ,e_threshold = e_threshold
-                        ,doRoll = doRoll
-                        ,rolling_window = rolling_window
-                        ,includeSTD = includeSTD
-                        ,mainGraphType = mainGraphType
-                        ,daysToAggregateOver = daysToAggregateOver
-                        ,yAxisLimits = yAxisLimits
-                        ,indexSpecificValue = indexSpecificValue)
-
+                        ,doRoll = FALSE
+                        ,rolling_window = 30
+                        ,yAxisLimits = yAxisLimits)
+  
   return(out)
 }
