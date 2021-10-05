@@ -25,7 +25,9 @@ Imports:
     lubridate,
     scales,
     purrr,
-    pryr
+    pryr,
+    ggpmisc
+
 Suggests: 
     knitr,
     rmarkdown
