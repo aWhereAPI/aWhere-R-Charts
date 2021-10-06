@@ -26,7 +26,8 @@ Imports:
     scales,
     purrr,
     pryr,
-    ggpmisc
+    ggpmisc,
+    broom
 
 Suggests: 
     knitr,

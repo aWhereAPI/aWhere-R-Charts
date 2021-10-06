@@ -67,6 +67,7 @@
 #' @import data.table
 #' @import scales
 #' @import ggpmisc
+#' @import broom
 #'
 #' @return plot object
 #'
