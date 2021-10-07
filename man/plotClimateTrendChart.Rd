@@ -80,7 +80,6 @@ but needed data and store in the aWhereEnv to persist it throughout a user R ses
 \examples{
 \dontrun{generateAndPlotClimateIndex(data = weather_df
                                      ,variable = "seasonTotalPrecip"
-                                     ,startYearOfSeasonToPlot = 2020
                                      ,season.monthDay_start = '09-01'
                                      ,season.monthDay_end = '11-30'
                                      ,years.LTN = seq(2010,2019,1)

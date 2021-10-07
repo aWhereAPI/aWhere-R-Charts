@@ -67,7 +67,7 @@
 #' @import data.table
 #' @import scales
 #' @import ggpmisc
-#' @import broom
+#' @importFrom broom glance
 #'
 #' @return plot object
 #'
@@ -787,6 +787,7 @@ generateaWhereChart <- function(data
             # turn off the x-axis title 
             axis.title.x=element_blank()) 
   } else {
+    library(broom)
     yearsPresent <- dataToPlot[,unique(date)]
     
     chart <- 
@@ -819,13 +820,13 @@ generateaWhereChart <- function(data
                                         size = size_font_axis_titles, 
                                         face = "bold")) +
       stat_smooth(method=lm, se = FALSE) +
-      stat_fit_glance(method = 'lm',
-                      label.y = "top",
-                      method.args = list(formula = y ~ x),
-                      mapping = aes(label = sprintf('italic(P)~"="~%.2g',
-                                                    stat(p.value))),
-                      parse = TRUE,
-                      size = 5)
+      stat_fit_glance(method = 'lm'
+                      ,label.y = "top"
+                      ,method.args = list(formula = y ~ x)
+                      ,mapping = aes(label = sprintf('italic(P)~"="~%.2g',
+                                                    stat(p.value)))
+                      ,parse = TRUE
+                      ,size = 5)
   }
   
   if (any(is.na(yAxisLimits)) == FALSE) {
