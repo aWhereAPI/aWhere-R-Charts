@@ -787,7 +787,6 @@ generateaWhereChart <- function(data
             # turn off the x-axis title 
             axis.title.x=element_blank()) 
   } else {
-    library(broom)
     yearsPresent <- dataToPlot[,unique(date)]
     
     chart <- 
