@@ -58,6 +58,11 @@
 #'   week (otpional)
 #' @param yAxisLimits Used to set the limits of the y axis explicitly.  If used,
 #'   must be a two element vector of the form c(minValue, maxValue) (optional)
+#' @param size_font_main_title Font size of main title of graph (optional)
+#' @param size_font_axis_titles Font size of axes on graph (optional)
+#' @param size_font_axis_labels Font size of labels on axes on graph (optional)
+#' @param size_font_legend_entries Font size of entries in lengend on graph (optional)
+#' @param line_width Font size for line geometries on charts (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
 #'   can override the default value of the index using this parameter (optional)
 #'
@@ -95,6 +100,11 @@ generateAndPlotClimateIndex <- function(data
                                       ,mainGraphType = 'line'
                                       ,daysToAggregateOver = NULL
                                       ,yAxisLimits = NA
+                                      ,size_font_main_title = 16
+                                      ,size_font_axis_titles = 14
+                                      ,size_font_axis_labels = 12
+                                      ,size_font_legend_entries = 12
+                                      ,line_width = 1
                                       ,indexSpecificValue = NULL) {
   
   #because we are going to change the datastructure and it is a data.table we
@@ -138,6 +148,11 @@ generateAndPlotClimateIndex <- function(data
                         ,mainGraphType = mainGraphType
                         ,daysToAggregateOver = daysToAggregateOver
                         ,yAxisLimits = yAxisLimits
+                        ,size_font_main_title = size_font_main_title
+                        ,size_font_axis_titles = size_font_axis_titles 
+                        ,size_font_axis_labels = size_font_axis_labels
+                        ,size_font_legend_entries = size_font_legend_entries
+                        ,line_width = line_width
                         ,indexSpecificValue = indexSpecificValue)
 
   return(out)

@@ -56,6 +56,11 @@
 #'   week (otpional)
 #' @param yAxisLimits Used to set the limits of the y axis explicitly.  If used,
 #'   must be a two element vector of the form c(minValue, maxValue) (optional)
+#' @param size_font_main_title Font size of main title of graph (optional)
+#' @param size_font_axis_titles Font size of axes on graph (optional)
+#' @param size_font_axis_labels Font size of labels on axes on graph (optional)
+#' @param size_font_legend_entries Font size of entries in lengend on graph (optional)
+#' @param line_width Font size for line geometries on charts (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
 #'   can ovveride the default value of the index using this parameter (optional)
 #'
@@ -94,6 +99,11 @@ generateaWhereChart <- function(data
                                 ,mainGraphType = 'line'
                                 ,daysToAggregateOver = NULL
                                 ,yAxisLimits = NA
+                                ,size_font_main_title = 16
+                                ,size_font_axis_titles = 14
+                                ,size_font_axis_labels = 12
+                                ,size_font_legend_entries = 12
+                                ,line_width = 1 
                                 ,indexSpecificValue = NULL) {
   
   
@@ -109,12 +119,6 @@ generateaWhereChart <- function(data
   colorScheme     <- list()
   rangeToUse      <- list()
   
-  # variables for title and label font sizes 
-  size_font_main_title <- 16
-  size_font_axis_titles <- 14
-  size_font_axis_labels <- 12
-  size_font_legend_entries <- 12
-  line_width <- 1 # size for line geometries on charts 
   
   #because we are going to change the datastructure and it is a data.table we
   #will explicitly copy what is passed in so it doesn't violate user's scoping

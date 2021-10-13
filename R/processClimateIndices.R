@@ -605,7 +605,7 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,numTropicalNights.average := mean(numTropicalNights.average,na.rm = TRUE), by = 'day']
       
-      dataToUse[,isTropicalNights := NULL]
+      dataToUse[,isTropicalNight := NULL]
     } else if (grepl(pattern = 'minOfMaxTemp|Minimum of Maximum Temperature'
                      ,x = variable.all[z]) == TRUE)  {
       
