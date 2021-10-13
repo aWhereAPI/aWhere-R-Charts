@@ -21,6 +21,11 @@ generateAndPlotClimateIndex(
   mainGraphType = "line",
   daysToAggregateOver = NULL,
   yAxisLimits = NA,
+  size_font_main_title = 16,
+  size_font_axis_titles = 14,
+  size_font_axis_labels = 12,
+  size_font_legend_entries = 12,
+  line_width = 1,
   indexSpecificValue = NULL
 )
 }
@@ -81,6 +86,16 @@ week (otpional)}
 
 \item{yAxisLimits}{Used to set the limits of the y axis explicitly.  If used,
 must be a two element vector of the form c(minValue, maxValue) (optional)}
+
+\item{size_font_main_title}{Font size of main title of graph (optional)}
+
+\item{size_font_axis_titles}{Font size of axes on graph (optional)}
+
+\item{size_font_axis_labels}{Font size of labels on axes on graph (optional)}
+
+\item{size_font_legend_entries}{Font size of entries in lengend on graph (optional)}
+
+\item{line_width}{Font size for line geometries on charts (optional)}
 
 \item{indexSpecificValue}{For the Climate Indices this tool can plot the user
 can override the default value of the index using this parameter (optional)}

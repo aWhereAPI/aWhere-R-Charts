@@ -27,7 +27,9 @@ Imports:
     purrr,
     pryr,
     ggpmisc,
-    broom
+    broom,
+    kableExtra,
+    webshot
 Suggests: 
     knitr,
     rmarkdown
