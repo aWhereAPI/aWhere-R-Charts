@@ -22,9 +22,9 @@
 #'   dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd as well as 
-#'   accumulatedPet, accumulatedPpet,accumulatedPrecipitation, gdd, pet, precipitation, maxRH, minRH,
-#'   solar,averageWind,dayMaxWind, rollingavgppet, maxTemp, minTemp, dayMaxWind, averageWind
+#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd, sumOfGdd, sumOfPET,
+#'   sumOfPrecip, sumOfSolar, averageMaxTemp, averageMinTemp, averageMaxRH, averageMinRH,
+#'   averageWind, and maxWindGusts
 #' @param season.monthDay_start Specify the start month-day combination of the "season"
 #'   you want analyzed (optional)
 #' @param season.monthDay_end Specify the end month-day combination of the "season"

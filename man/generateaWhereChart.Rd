@@ -24,6 +24,7 @@ generateaWhereChart(
   size_font_axis_labels = 12,
   size_font_legend_entries = 12,
   line_width = 1,
+  annotationsWhichSide = "left",
   indexSpecificValue = NULL
 )
 }

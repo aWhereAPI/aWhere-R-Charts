@@ -22,9 +22,9 @@
 #'   dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd as well as 
-#'   accumulatedPet, accumulatedPpet,accumulatedPrecipitation, gdd, pet, precipitation, maxRH, minRH,
-#'   solar,averageWind,dayMaxWind, rollingavgppet, maxTemp, minTemp, dayMaxWind, averageWind
+#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, sumOfGdd, sumOfPET,
+#'   sumOfPrecip, sumOfSolar, averageMaxTemp, averageMinTemp, averageMaxRH, averageMinRH,
+#'   averageWind, and maxWindGust
 #' @param season.monthDay_start Specify the start month-day combination of the "season"
 #'   you want analyzed (optional)
 #' @param season.monthDay_end Specify the end month-day combination of the "season"
@@ -47,6 +47,7 @@
 #' @param size_font_axis_labels Font size of labels on axes on graph (optional)
 #' @param size_font_legend_entries Font size of entries in lengend on graph (optional)
 #' @param line_width Font size for line geometries on charts (optional)
+#' @param annotationsWhichSide Whether to plot annotations on left or right side of figure (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
 #'   can override the default value of the index using this parameter (optional)
 #'
@@ -80,7 +81,8 @@ plotClimateTrendChart <- function(data
                                   ,size_font_axis_titles = 14
                                   ,size_font_axis_labels = 12
                                   ,size_font_legend_entries = 12
-                                  ,line_width = 1 
+                                  ,line_width = 1
+                                  ,annotationsWhichSide = 'left'
                                   ,indexSpecificValue = NULL) {
 
   #because we are going to change the datastructure and it is a data.table we
@@ -135,7 +137,8 @@ plotClimateTrendChart <- function(data
                         ,size_font_axis_labels = size_font_axis_labels
                         ,size_font_legend_entries = size_font_legend_entries
                         ,line_width = line_width
-                        ,yAxisLimits = yAxisLimits)
+                        ,yAxisLimits = yAxisLimits
+                        ,annotationsWhichSide = annotationsWhichSide)
   
   return(out)
 }

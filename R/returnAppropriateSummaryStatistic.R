@@ -12,7 +12,9 @@
 #'   dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile
+#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, maxOfAccumulatedGdd
+#'   and maxOfAccumulatedPet, sumOfGdd, sumOfPET, sumOfPrecip, sumOfSolar, averageMaxTemp, 
+#'   averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGusts
 #'  
 #' @return string
 #'
@@ -109,7 +111,17 @@ returnAppropriateSummaryStatistic <- function(variable) {
     
     summaryStatistic.use <- 'max'
     
-  } 
+  } else if (grepl(pattern = 'sumOfGdd|sumOfPet|sumOfPrecip|sumOfSolar|maxWindGust'
+                   ,x = variable) == TRUE)  {
+    
+    summaryStatistic.use <- 'max'
+    
+  } else if (grepl(pattern = 'averageMaxTemp|averageMinTemp|averageMaxRH|averageMinRH|averageWind'
+                    ,x = variable) == TRUE)  {
+    
+    summaryStatistic.use <- 'mean'
+    
+  }
   
   return(summaryStatistic.use)
 }

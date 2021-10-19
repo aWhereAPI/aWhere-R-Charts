@@ -19,6 +19,7 @@ plotClimateTrendChart(
   size_font_axis_labels = 12,
   size_font_legend_entries = 12,
   line_width = 1,
+  annotationsWhichSide = "left",
   indexSpecificValue = NULL
 )
 }
@@ -32,9 +33,9 @@ numTropicalNights, minOfMaxTemp, maxOfMaxTemp, minOfMinTemp, maxOfMinTemp,
 dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd as well as 
-accumulatedPet, accumulatedPpet,accumulatedPrecipitation, gdd, pet, precipitation, maxRH, minRH,
-solar,averageWind,dayMaxWind, rollingavgppet, maxTemp, minTemp, dayMaxWind, averageWind}
+percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, sumOfGdd, sumOfPET,
+sumOfPrecip, sumOfSolar, averageMaxTemp, averageMinTemp, averageMaxRH, averageMinRH,
+averageWind, and maxWindGust}
 
 \item{season.monthDay_start}{Specify the start month-day combination of the "season"
 you want analyzed (optional)}
@@ -66,6 +67,8 @@ must be a two element vector of the form c(minValue, maxValue) (optional)}
 \item{size_font_legend_entries}{Font size of entries in lengend on graph (optional)}
 
 \item{line_width}{Font size for line geometries on charts (optional)}
+
+\item{annotationsWhichSide}{Whether to plot annotations on left or right side of figure (optional)}
 
 \item{indexSpecificValue}{For the Climate Indices this tool can plot the user
 can override the default value of the index using this parameter (optional)}

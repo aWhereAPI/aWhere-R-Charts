@@ -104,6 +104,7 @@ generateaWhereChart <- function(data
                                 ,size_font_axis_labels = 12
                                 ,size_font_legend_entries = 12
                                 ,line_width = 1 
+                                ,annotationsWhichSide = 'left'
                                 ,indexSpecificValue = NULL) {
   
   
@@ -793,6 +794,14 @@ generateaWhereChart <- function(data
   } else {
     yearsPresent <- dataToPlot[,unique(date)]
     
+    if (annotationsWhichSide == 'left') {
+      xCoord_annotation <- dataToPlot[,min(date,na.rm = TRUE)]
+      xCoord_hJust <- 0
+    } else {
+      xCoord_annotation <- dataToPlot[,max(date,na.rm = TRUE)]
+      xCoord_hJust <- 1
+    }
+    
     chart <- 
       chart +
       # Reorder legend entries
@@ -823,13 +832,22 @@ generateaWhereChart <- function(data
                                         size = size_font_axis_titles, 
                                         face = "bold")) +
       stat_smooth(method=lm, se = FALSE) +
-      stat_fit_glance(method = 'lm'
+      ggpmisc::stat_fit_glance(method = 'lm'
                       ,label.y = "top"
+                      ,label.x = annotationsWhichSide
                       ,method.args = list(formula = y ~ x)
                       ,mapping = aes(label = sprintf('italic(P)~"="~%.2g',
                                                     stat(p.value)))
                       ,parse = TRUE
-                      ,size = 5)
+                      ,size = 5) +
+      annotate(
+        geom = "text", x = xCoord_annotation, y = dataToPlot[,min(measure)], 
+        label = paste0('CV = ',round(dataToPlot[,sd(measure,na.rm = TRUE)/mean(measure,na.rm = TRUE)],2))
+        ,hjust = xCoord_hJust , vjust = -1.5, size = 5) +
+      annotate(
+        geom = "text", x = xCoord_annotation, y = dataToPlot[,min(measure)], 
+        label = paste0('Average = ',round(dataToPlot[,mean(measure,na.rm = TRUE)],2))
+        ,hjust = xCoord_hJust, vjust = 0, size = 5)
   }
   
   if (any(is.na(yAxisLimits)) == FALSE) {

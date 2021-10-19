@@ -13,7 +13,9 @@ numTropicalNights, minOfMaxTemp, maxOfMaxTemp, minOfMinTemp, maxOfMinTemp,
 dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile}
+percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, maxOfAccumulatedGdd
+and maxOfAccumulatedPet, sumOfGdd, sumOfPET, sumOfPrecip, sumOfSolar, averageMaxTemp, 
+averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGusts}
 }
 \value{
 string

@@ -29,9 +29,9 @@ numTropicalNights, minOfMaxTemp, maxOfMaxTemp, minOfMinTemp, maxOfMinTemp,
 dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd as well as 
-accumulatedPet, accumulatedPpet,accumulatedPrecipitation, gdd, pet, precipitation, maxRH, minRH,
-solar,averageWind,dayMaxWind, rollingavgppet, maxTemp, minTemp, dayMaxWind, averageWind}
+percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd, sumOfGdd, sumOfPET,
+sumOfPrecip, sumOfSolar, averageMaxTemp, averageMinTemp, averageMaxRH, averageMinRH,
+averageWind, and maxWindGusts}
 
 \item{season.monthDay_start}{Specify the start month-day combination of the "season"
 you want analyzed (optional)}

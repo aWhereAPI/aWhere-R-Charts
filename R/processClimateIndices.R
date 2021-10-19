@@ -20,9 +20,9 @@
 #'   dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd as well as 
-#'   accumulatedPet, accumulatedPpet,accumulatedPrecipitation, gdd, pet, precipitation, maxRH, minRH,
-#'   solar,averageWind,dayMaxWind, rollingavgppet, maxTemp, minTemp, dayMaxWind, averageWind
+#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, sumOfGdd, sumOfPET,
+#'   sumOfPrecip, sumOfSolar, averageMaxTemp, averageMinTemp, averageMaxRH, averageMinRH,
+#'   averageWind, and maxWindGust
 #' @param variable_rightAxis  What variable to plot over the primary variable.
 #'   The right y-axis of the plot will be used to present its range. Note that
 #'   it will always be plotted as a line chart. Same valid values as the
@@ -389,6 +389,7 @@ processClimateIndices <- function(dataToUse
   ####################################################################################################
   #for each variable to be plotted, loop through to create data structures for visualization
   variable.all <- variable
+  
   if (is.null(variable_rightAxis) == FALSE) {
     variable.all <- c(variable,variable_rightAxis)
   } else {
@@ -1134,10 +1135,223 @@ processClimateIndices <- function(dataToUse
       dataToUse[,c('day_exceedThresh','dayOfSeason','countDaysPrecipExceedThresh') := NULL]
       
       
+    } else if (grepl(pattern = 'sumOfGDD|Sum of Growing Degree Days'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'gdd'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("GDD data required to calculate the index 'Sum Of Growing Degree Days'")
+      }
+      
+      variable.all[z] <- 'sumOfGDD'
+      longname[z] <- 'Sum of Growing Degree Days'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,sumOfGDD.amount := cumsum(gdd.amount),by = 'seasonNumber']
+      
+      dataToUse[,sumOfGDD.stdDev := sd(sumOfGDD.amount),by = 'day']
+      dataToUse[,sumOfGDD.average := mean(sumOfGDD.amount), by = 'day']
+      
+      dataToUse[,sumOfGDD.average := mean(sumOfGDD.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'sumOfPET|Sum of PET'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'pet'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("PET data required to calculate the index 'Sum Of PET'")
+      }
+      
+      variable.all[z] <- 'sumOfPET'
+      longname[z] <- 'Sum of PET'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,sumOfPET.amount := cumsum(pet.amount),by = 'seasonNumber']
+      
+      dataToUse[,sumOfPET.stdDev := sd(sumOfPET.amount),by = 'day']
+      dataToUse[,sumOfPET.average := mean(sumOfPET.amount), by = 'day']
+      
+      dataToUse[,sumOfPET.average := mean(sumOfPET.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'sumOfPrecip|Sum of Precipitation'
+                       ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'precipitation'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Precipitation data required to calculate the index 'Sum Of Precipitation'")
+      }
+      
+      variable.all[z] <- 'sumOfPrecip'
+      longname[z] <- 'Sum of Precipitation'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,sumOfPrecip.amount := cumsum(precipitation.amount),by = 'seasonNumber']
+      
+      dataToUse[,sumOfPrecip.stdDev := sd(sumOfPrecip.amount),by = 'day']
+      dataToUse[,sumOfPrecip.average := mean(sumOfPrecip.amount), by = 'day']
+      
+      dataToUse[,sumOfPrecip.average := mean(sumOfPrecip.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'sumOfSolar|Sum of Solar Radiation'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'solar'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Solar data required to calculate the index 'Sum Of Solar Radiation'")
+      }
+      
+      variable.all[z] <- 'sumOfSolar'
+      longname[z] <- 'Sum of Solar Radiation'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,sumOSolar.amount := cumsum(solar.amount),by = 'seasonNumber']
+      
+      dataToUse[,sumOfSolar.stdDev := sd(sumOfSolar.amount),by = 'day']
+      dataToUse[,sumOfSolar.average := mean(sumOfSolar.amount), by = 'day']
+      
+      dataToUse[,sumOfSolar.average := mean(sumOfSolar.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'averageMaxTemp|Average Maximum Temperature'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'temperatures.max'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Temperature data required to calculate the index 'Average Maximum Temperature'")
+      }
+      
+      variable.all[z] <- 'averageMaxTemp'
+      longname[z] <- 'Average Maximum Temperature'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,averageMaxTemp.amount := mean(temperatures.max.amount,na.rm = TRUE),by = 'seasonNumber']
+      
+      dataToUse[,averageMaxTemp.stdDev := sd(averageMaxTemp.amount),by = 'day']
+      dataToUse[,averageMaxTemp.average := mean(averageMaxTemp.amount), by = 'day']
+      
+      dataToUse[,averageMaxTemp.average := mean(averageMaxTemp.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'averageMinTemp|Average Minimum Temperature'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'temperatures.min'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Temperature data required to calculate the index 'Average Maximum Temperature'")
+      }
+      
+      variable.all[z] <- 'averageMinTemp'
+      longname[z] <- 'Average Minimum Temperature'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,averageMinTemp.amount := mean(temperatures.min.amount,na.rm = TRUE),by = 'seasonNumber']
+      
+      dataToUse[,averageMinTemp.stdDev := sd(averageMinTemp.amount),by = 'day']
+      dataToUse[,averageMinTemp.average := mean(averageMinTemp.amount), by = 'day']
+      
+      dataToUse[,averageMinTemp.average := mean(averageMinTemp.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'averageMaxRH|Average Maximum Relative Humidity'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'relativeHumidity.max'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Relative Humidity data required to calculate the index 'Average Maximum Relative Humidity'")
+      }
+      
+      variable.all[z] <- 'averageMaxRH'
+      longname[z] <- 'Average Maximum Relative Humidity'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,averageMaxRH.amount := mean(relativeHumidity.max.amount,na.rm = TRUE),by = 'seasonNumber']
+      
+      dataToUse[,averageMaxRH.stdDev := sd(averageMaxRH.amount),by = 'day']
+      dataToUse[,averageMaxRH.average := mean(averageMaxRH.amount), by = 'day']
+      
+      dataToUse[,averageMaxRH.average := mean(averageMaxRH.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'averageMinRH|Average Minimum Relative Humidity'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'relativeHumidity.min'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Temperature data required to calculate the index 'Average Maximum Temperature'")
+      }
+      
+      variable.all[z] <- 'averageMinRH'
+      longname[z] <- 'Average Minimum Relative Humidity'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,averageMinRH.amount := mean(relativeHumidity.min.amount,na.rm = TRUE),by = 'seasonNumber']
+      
+      dataToUse[,averageMinRH.stdDev := sd(averageMinRH.amount),by = 'day']
+      dataToUse[,averageMinRH.average := mean(averageMinRH.amount), by = 'day']
+      
+      dataToUse[,averageMinRH.average := mean(averageMinRH.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'averageWind|Average Windspeed'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'wind.average'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Wind data required to calculate the index 'Average Wind Speed'")
+      }
+      
+      variable.all[z] <- 'averageWind'
+      longname[z] <- 'Average Windspeed'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,averageWind.amount := mean(wind.average.amount,na.rm = TRUE),by = 'seasonNumber']
+      
+      dataToUse[,averageWind.stdDev := sd(averageWind.amount),by = 'day']
+      dataToUse[,averageWind.average := mean(averageWind.amount), by = 'day']
+      
+      dataToUse[,averageWind.average := mean(averageWind.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'maxWindGust|Maximum Wind Gust Speed'
+                     ,x = variable.all[z]) == TRUE)  {
+      
+      if (any(grepl(pattern = 'wind.dayMax'
+                    ,x = colnames(dataToUse)
+                    ,fixed = TRUE)) == FALSE) {
+        stop("Daily Maximum Wind data required to calculate the index 'Maximum Wind Gust Speed'")
+      }
+      
+      variable.all[z] <- 'maxWindGust'
+      longname[z] <- 'Maximum Wind Gust Speed'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,maxWindGust.amount := max(wind.dayMax.amount,na.rm = TRUE),by = 'seasonNumber']
+      
+      dataToUse[,maxWindGust.stdDev := sd(maxWindGust.amount),by = 'day']
+      dataToUse[,maxWindGust.average := mean(maxWindGust.amount), by = 'day']
+      
+      dataToUse[,maxWindGust.average := mean(maxWindGust.average,na.rm = TRUE), by = 'day']
+      
     } else if (is.null(variable.all[z] == TRUE)) {
       next
     }
   }
+  
+  
+  sumOfPrecipitation
   
   
   ####################################################################################################
