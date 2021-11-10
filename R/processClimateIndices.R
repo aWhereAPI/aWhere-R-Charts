@@ -1350,10 +1350,6 @@ processClimateIndices <- function(dataToUse
     }
   }
   
-  
-  sumOfPrecipitation
-  
-  
   ####################################################################################################
   if (is.null(startYearOfSeasonToPlot) == FALSE) {
     seasonToPlot.string <- paste0("\nCurrent Year is ",startYearOfSeasonToPlot)
