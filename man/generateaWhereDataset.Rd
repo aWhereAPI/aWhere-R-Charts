@@ -12,7 +12,8 @@ generateaWhereDataset(
   year_start,
   year_end,
   verbose = TRUE,
-  appendPrevDataPull = TRUE
+  appendPrevDataPull = TRUE,
+  removeFeb29Data = FALSE
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ should be included in the norms calculation (required)}
 \item{appendPrevDataPull}{disable behavior for R to request and append only
 novel data for the current location but instead to create data object fresh
 at all times (optional)}
+
+\item{removeFeb29Data}{automatically remove Feb 29th data (optional)}
 }
 \value{
 dataframe

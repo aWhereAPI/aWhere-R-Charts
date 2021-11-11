@@ -639,16 +639,15 @@ generateaWhereChart <- function(data
   dataToPlot <- rbindlist(chart_data_long[currentIndices])
   #make chart based on appropriate graph type
   chart <- 
-    ggplot(data = dataToPlot
-           ,aes(x = date,y = measure)
-           ,na.rm = TRUE)
+    ggplot()
   
   if (mainGraphType == 'line') {
     #plot actual lines on top
     chart <- 
       chart +
       geom_ribbon(data = rbindlist(chart_data_long[currentIndices])
-                  ,aes(ymin = measure
+                  ,aes(x = date
+                       ,ymin = measure
                        ,ymax = measure
                        ,fill = Variable
                        ,colour = Variable)

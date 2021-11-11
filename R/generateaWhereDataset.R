@@ -31,6 +31,7 @@
 #' @param appendPrevDataPull disable behavior for R to request and append only
 #'   novel data for the current location but instead to create data object fresh
 #'   at all times (optional)
+#' @param removeFeb29Data automatically remove Feb 29th data (optional)   
 #'
 #' @import dplyr
 #' @import aWhereAPI
@@ -58,7 +59,8 @@ generateaWhereDataset <- function(lat
                                   ,year_start
                                   ,year_end
                                   ,verbose = TRUE
-                                  ,appendPrevDataPull = TRUE) {
+                                  ,appendPrevDataPull = TRUE
+                                  ,removeFeb29Data = FALSE) {
   
   if (exists('awhereEnv75247') == FALSE) {
     stop('Please load credentials for aWhereAPI before continuing')
@@ -717,6 +719,10 @@ generateaWhereDataset <- function(lat
                   ,'daily.accumulatedPet.stdDev'
                   ,'daily.accumulatedPpet.stdDev'
                   ,'daily.accumulatedGdd.stdDev') := NULL]
+  
+  if (removeFeb29Data == TRUE) {
+    weather_full <- weather_full[day != '02-29',]
+  }
   
   
   if (verbose == TRUE) {
