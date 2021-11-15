@@ -830,10 +830,13 @@ generateaWhereChart <- function(data
                   ,data = dataToPlot
                   ,se = FALSE) +
       ggpmisc::stat_fit_glance(method = 'lm'
+                               ,data = dataToPlot
                       ,label.y = "top"
                       ,label.x = annotationsWhichSide
                       ,method.args = list(formula = y ~ x)
-                      ,mapping = aes(label = sprintf('italic(P)~"="~%.2g',
+                      ,mapping = aes(x = date
+                                     ,y = measure
+                                     ,label = sprintf('italic(P)~"="~%.2g',
                                                     stat(p.value)))
                       ,parse = TRUE
                       ,size = 5) +
