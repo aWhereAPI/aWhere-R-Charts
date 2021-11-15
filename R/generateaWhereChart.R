@@ -645,7 +645,7 @@ generateaWhereChart <- function(data
     #plot actual lines on top
     chart <- 
       chart +
-      geom_ribbon(data = rbindlist(chart_data_long[currentIndices])
+      geom_ribbon(data = dataToPlot
                   ,aes(x = date
                        ,ymin = measure
                        ,ymax = measure
@@ -657,19 +657,13 @@ generateaWhereChart <- function(data
   } else {
     chart <- 
       chart +
-      geom_col(data = rbindlist(chart_data_long[currentIndices])[!grepl(pattern = 'LTN',x = Variable,fixed = TRUE)], 
+      geom_col(data = dataToPlot[!grepl(pattern = 'LTN',x = Variable,fixed = TRUE)], 
                aes(x = date
                    ,y = measure
                    ,fill = Variable)
                ,position = 'dodge'
                ,na.rm = TRUE) +
-      #geom_line(data = chart_data_long[[1]][grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
-      #          ,aes(x = date
-      #               ,y = measure
-      #               ,colour = Variable)
-      #          ,na.rm = TRUE
-      #          ,size = line_width) 
-      geom_ribbon(data = rbindlist(chart_data_long[currentIndices])[grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
+      geom_ribbon(data = dataToPlot[grepl(pattern = 'LTN',x = Variable,fixed = TRUE)]
                   ,aes(x = date
                        ,ymin = measure
                        ,ymax = measure
@@ -678,7 +672,7 @@ generateaWhereChart <- function(data
                   ,na.rm = TRUE
                   ,size = line_width) 
     
-    numFillsLegend <- rbindlist(chart_data_long[currentIndices])[,length(unique(Variable))]
+    numFillsLegend <- dataToPlot[,length(unique(Variable))]
   }
   
   #include SD info for main variable
@@ -725,7 +719,7 @@ generateaWhereChart <- function(data
                                                                  ,to = rangeToUse[currentIndices][[1]])
                                                ,name = unique(unlist(ylabel[currentIndices])))) 
       
-      numFillsLegend <- numFillsLegend + rbindlist(chart_data_long[currentIndices])[,length(unique(Variable))]
+      numFillsLegend <- numFillsLegend + dataToPlot[,length(unique(Variable))]
     }
   }
   
@@ -830,7 +824,11 @@ generateaWhereChart <- function(data
             axis.title.x = element_text(color = "grey20", 
                                         size = size_font_axis_titles, 
                                         face = "bold")) +
-      stat_smooth(method=lm, se = FALSE) +
+      stat_smooth(aes(x = date
+                      ,y = measure)
+                  ,method=lm,
+                  ,data = dataToPlot
+                  ,se = FALSE) +
       ggpmisc::stat_fit_glance(method = 'lm'
                       ,label.y = "top"
                       ,label.x = annotationsWhichSide
