@@ -135,7 +135,7 @@ returnAppropriateSummaryStatistic <- function(variable) {
     
     summaryStatistic.use <- 'max'
     
-  } else if (grepl(pattern = 'averageMax|averageMin|averageWind'
+  } else if (grepl(pattern = 'averageMax|averageMin|averageWind|wind.average'
                    ,x = variable
                    ,ignore.case = TRUE) == TRUE)  {
     
@@ -147,7 +147,31 @@ returnAppropriateSummaryStatistic <- function(variable) {
     
     summaryStatistic.use <- 'max'
     
-  } else {
+  } else if (grepl(pattern = 'gdd|pet|ppet|precipitation'
+                   ,x = variable
+                   ,ignore.case = TRUE) == TRUE)  {
+    
+    summaryStatistic.use <- 'sum' 
+    
+  } else if (grepl(pattern = 'relativeHumidity.max|solar|temperatures.max|wind.dayMax'
+                   ,x = variable
+                   ,ignore.case = TRUE) == TRUE)  {
+    
+    summaryStatistic.use <- 'max' 
+      
+  } else if (grepl(pattern = 'relativeHumidity.min|temperatures.min'
+                  ,x = variable
+                  ,ignore.case = TRUE) == TRUE)  {
+    
+    summaryStatistic.use <- 'min'
+      
+  } else if (grepl(pattern = 'accumulated'
+                  ,x = variable
+                  ,ignore.case = TRUE) == TRUE)  {
+    
+    summaryStatistic.use <- 'max'
+    
+  }else {
     stop('Need to define methods for summarizing this index\n')
   }
   

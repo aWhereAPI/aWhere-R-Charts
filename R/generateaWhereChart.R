@@ -193,36 +193,11 @@ generateaWhereChart <- function(data
                          ,fixed = TRUE) == TRUE) {
           
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := ',currentColumn,']')))
-          
-        } else if ((grepl(pattern = 'gdd|pet|ppet|precipitation'
-                          ,x = currentColumn
-                          ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
-          
-          eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
-                                   ,width = daysToAggregateOver 
-                                   ,align = "right"
-                                   ,FUN = sum
-                                   ,na.rm = TRUE
-                                   ,fill = NA
-                                   ,partial = TRUE)',seasonNumber_str,']')))
-          
-        } else if ((grepl(pattern = 'maxLenDrySpell'
-                          ,x = currentColumn
-                          ,ignore.case = TRUE) & typesOfColumns[y] != '.stdDev') == TRUE) {
-          
-          eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
-                                   ,width = daysToAggregateOver 
-                                   ,align = "left"
-                                   ,FUN = max
-                                   ,na.rm = TRUE
-                                   ,fill = NA
-                                   ,partial = TRUE)',seasonNumber_str,']')))
-          
         } else {
           eval(parse(text = paste0('dataToUse[,',paste0(currentColumn,'.new'),' := zoo::rollapply(',currentColumn,' 
                                    ,width = daysToAggregateOver 
                                    ,align = "right"
-                                   ,FUN = mean
+                                   ,FUN = ',returnAppropriateSummaryStatistic(variablesToProcess[x]),'
                                    ,na.rm = TRUE
                                    ,fill = NA
                                    ,partial = TRUE)',seasonNumber_str,']')))
