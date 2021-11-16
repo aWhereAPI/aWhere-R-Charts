@@ -24,8 +24,7 @@ generateaWhereChart(
   size_font_axis_labels = 12,
   size_font_legend_entries = 12,
   line_width = 1,
-  annotationsWhichSide = "left",
-  indexSpecificValue = NULL
+  annotationsWhichSide = "left"
 )
 }
 \arguments{
@@ -81,9 +80,6 @@ must be a two element vector of the form c(minValue, maxValue) (optional)}
 \item{size_font_legend_entries}{Font size of entries in lengend on graph (optional)}
 
 \item{line_width}{Font size for line geometries on charts (optional)}
-
-\item{indexSpecificValue}{For the Climate Indices this tool can plot the user
-can ovveride the default value of the index using this parameter (optional)}
 
 \item{maingraphType}{Which type of graph to make for the main plot.  Valid
 values are "line" and "bar" (optional)}

@@ -61,8 +61,6 @@
 #' @param size_font_axis_labels Font size of labels on axes on graph (optional)
 #' @param size_font_legend_entries Font size of entries in lengend on graph (optional)
 #' @param line_width Font size for line geometries on charts (optional)
-#' @param indexSpecificValue For the Climate Indices this tool can plot the user
-#'   can ovveride the default value of the index using this parameter (optional)
 #'
 #' @import tidyr
 #' @import dplyr
@@ -104,8 +102,7 @@ generateaWhereChart <- function(data
                                 ,size_font_axis_labels = 12
                                 ,size_font_legend_entries = 12
                                 ,line_width = 1 
-                                ,annotationsWhichSide = 'left'
-                                ,indexSpecificValue = NULL) {
+                                ,annotationsWhichSide = 'left') {
   
   
   #We are using a list consturct to hold all variables so we can loop over its length
@@ -351,7 +348,7 @@ generateaWhereChart <- function(data
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'mm'
-    } else if (grepl(pattern = 'relativeHumidity'
+    } else if (grepl(pattern = 'relativeHumidity|RH'
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = '%'
@@ -359,7 +356,7 @@ generateaWhereChart <- function(data
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'Wh/m^2'
-    } else if (grepl(pattern = 'temperatures|minOfMaxTemp|maxOfMaxTemp|minOfMinTemp|maxOfMinTemp'
+    } else if (grepl(pattern = 'temperatures|MaxTemp|MinTemp'
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'Celsius'
@@ -406,9 +403,9 @@ generateaWhereChart <- function(data
                                        ,LTN - LTNstddev)]
     
     #for these variables, the y axis should not below zero
-    if (grepl(pattern = 'Gdd|PPet|Pet|precipitation|relativeHumidity|solar|wind|maxLenDrySpell'
+    if (grepl(pattern = 'temperatures|MaxTemp|MinTemp'
               ,x = variable[[x]]
-              ,ignore.case = TRUE)) {
+              ,ignore.case = TRUE) == TRUE) {
       chart_data[[x]][ymin < 0, ymin := 0]
     }
     
