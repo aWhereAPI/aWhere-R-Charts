@@ -289,7 +289,7 @@ generateaWhereChart <- function(data
     }
     
     #if the variable to be plotted is relevant and if the user wants to use effective precipitation, calculate new values
-    if ((grepl(pattern = 'precipitation|Ppet'
+    if ((grepl(pattern = 'precipitation|precip|Ppet'
                ,x = variable[[x]]
                ,ignore.case = TRUE)) & e_precip == TRUE) {
       
@@ -344,7 +344,7 @@ generateaWhereChart <- function(data
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'mm'
-    } else if (grepl(pattern = 'precipitation|seasonTotalPrecip|precipSumExceedPercentile'
+    } else if (grepl(pattern = 'precipitation|sumOfPrecip|seasonTotalPrecip|precipSumExceedPercentile'
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'mm'
