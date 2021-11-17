@@ -21,7 +21,7 @@
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
 #'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, maxOfAccumulatedGdd,
-#'   maxOfAccumulatedPet, sumOfGdd, sumOfPET, sumOfPrecip, sumOfSolar, averageMaxTemp, 
+#'   maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfSolar, averageMaxTemp, 
 #'   averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGust
 #'   
 #' @param variable_rightAxis  What variable to plot over the primary variable.
@@ -403,7 +403,8 @@ processClimateIndices <- function(dataToUse
   #Place code for the specific Indices Here
   for (z in 1:length(variable.all)) {
     if (grepl(pattern = 'maxLenDrySpell|Maximum Length of Dry Spell|maxLenWetSpell|Maximum Length of Wet Spell'
-              ,x = variable.all[z]) == TRUE)  {
+              ,x = variable.all[z]
+              ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'precipitation'
                     ,x = colnames(dataToUse)
@@ -419,7 +420,8 @@ processClimateIndices <- function(dataToUse
       index.title <- paste0('Threshhold set at ',indexSpecificValue,'mm\n')
       
       if (grepl(pattern = 'maxLenDrySpell|Maximum Length of Dry Spell'
-                ,x = variable.all[z]) == TRUE) {
+                ,x = variable.all[z]
+                ,ignore.case = TRUE) == TRUE) {
         variable.all[z] <- 'maxLenDrySpell'
         longname[z] <- 'Maximum Length of Dry Spell'
         
@@ -454,7 +456,8 @@ processClimateIndices <- function(dataToUse
       suppressWarnings(dataToUse[,c('tempCol.current','tempCol.ltn','group.current') := NULL])
       
       if (grepl(pattern = 'maxLenDrySpell'
-                ,x = variable.all[z]) == TRUE) {
+                ,x = variable.all[z]
+                ,ignore.case = TRUE) == TRUE) {
         
         setnames(dataToUse,c('counter.current'),c('maxLenDrySpell.amount'))
         
@@ -481,7 +484,8 @@ processClimateIndices <- function(dataToUse
       }
       
     } else if (grepl(pattern = 'numFrostDays|Number of Frost Days'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.min'
                     ,x = colnames(dataToUse)
@@ -513,7 +517,8 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,isFrostDay := NULL]
     } else if (grepl(pattern = 'numSummerDays|Number of Summer Days'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.max'
                     ,x = colnames(dataToUse)
@@ -545,7 +550,8 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,isSummerDay := NULL]
     } else if (grepl(pattern = 'numIcingDays|Number of Icing Days'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.max'
                     ,x = colnames(dataToUse)
@@ -577,7 +583,8 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,isIcingDay := NULL]
     } else if (grepl(pattern = 'numTropicalNights|Number of Tropical Nights'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.min'
                     ,x = colnames(dataToUse)
@@ -609,7 +616,8 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,isTropicalNight := NULL]
     } else if (grepl(pattern = 'minOfMaxTemp|Minimum of Maximum Temperature'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.max'
                     ,x = colnames(dataToUse)
@@ -633,7 +641,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,minOfMaxTemp.average := mean(minOfMaxTemp.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'maxOfMaxTemp|Maximum of Maximum Temperature'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.max'
                     ,x = colnames(dataToUse)
@@ -657,7 +666,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,maxOfMaxTemp.average := mean(maxOfMaxTemp.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'minOfMinTemp|Minimum of Minimum Temperature'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.min'
                     ,x = colnames(dataToUse)
@@ -681,7 +691,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,minOfMinTemp.average := mean(minOfMinTemp.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'maxOfMinTemp|Maximum of Minimum Temperature'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.min'
                     ,x = colnames(dataToUse)
@@ -705,7 +716,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,maxOfMinTemp.average := mean(maxOfMinTemp.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'dailyTempRange|Daily Temperature Range'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if ((any(grepl(pattern = 'temperatures.min'
                      ,x = colnames(dataToUse)
@@ -735,7 +747,8 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,c('dayInSeason','temp') := NULL]
     } else if (grepl(pattern = 'maxSingleDayPrecip|Maximum of Single Day Precipitation'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'precipitation'
                     ,x = colnames(dataToUse)
@@ -759,7 +772,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,maxSingleDayPrecip.average := mean(maxSingleDayPrecip.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'max5ConsDayPrecip|Maximum of Five Consecutive Day Precipitation'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'precipitation'
                     ,x = colnames(dataToUse)
@@ -787,7 +801,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,temp := NULL]
       
     } else if (grepl(pattern = 'seasonTotalPrecip|Seasonal Total Precipitation'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'precipitation'
                     ,x = colnames(dataToUse)
@@ -811,7 +826,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,seasonTotalPrecip.average := mean(seasonTotalPrecip.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'simplePrecipIntensityIndex|Simple Precipitation Intensity Index'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'precipitation'
                     ,x = colnames(dataToUse)
@@ -851,7 +867,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,c('temp','tempCol.current','precip.temp','count.tempCol') := NULL]
       
     } else if (grepl(pattern = 'warmSpellDurIndex|Warm Spell Duration Index|coldSpellDurIndex|Cold Spell Duration Index'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.max'
                     ,x = colnames(dataToUse)
@@ -861,7 +878,8 @@ processClimateIndices <- function(dataToUse
       
       
       if (grepl(pattern = 'warmSpellDurIndex|Warm Spell Duration Index'
-                ,x = variable.all[z]) == TRUE) {
+                ,x = variable.all[z]
+                ,ignore.case = TRUE) == TRUE) {
         variable.all[z] <- 'warmSpellDurIndex'
         longname[z] <- 'Warm Spell Duration Index'
         
@@ -900,7 +918,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,spell_int := FALSE]
       
       if (grepl(pattern = 'warmSpellDurIndex|Warm Spell Duration Index'
-                ,x = variable.all[z]) == TRUE) {
+                ,x = variable.all[z]
+                ,ignore.case = TRUE) == TRUE) {
         
         dataToUse[temperatures.max.amount > temp, spell_day := TRUE]
         
@@ -918,7 +937,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[counter.current >= 6, spell_int := TRUE]
       
       if (grepl(pattern = 'warmSpellDurIndex|Warm Spell Duration Index'
-                ,x = variable.all[z]) == TRUE) {
+                ,x = variable.all[z]
+                ,ignore.case = TRUE) == TRUE) {
         
         dataToUse[,warmSpellDurIndex.amount := cumsum(spell_int), by = 'seasonNumber']
         # dataToUse[lubridate::year(date) %in% years.LTN,warmSpellDurIndex.stdDev := sd(warmSpellDurIndex.amount),by = 'day']
@@ -945,7 +965,8 @@ processClimateIndices <- function(dataToUse
       
       
     } else if (grepl(pattern = 'precipSumExceedPercentile|Sum of Precipitation when Precipitation Exceeding Quantile'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'precipitation'
                     ,x = colnames(dataToUse)
@@ -984,7 +1005,8 @@ processClimateIndices <- function(dataToUse
       
       
     } else if (grepl(pattern = 'countDaysPrecipExceedAmount|Count of Days When Precipitation Exceeding Thresshold'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'precipitation'
                     ,x = colnames(dataToUse)
@@ -1018,7 +1040,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,c('temp') := NULL]
       
     }  else if (grepl(pattern = 'percentDaysMinTempBelowQuantile|Percentage of Days Minimum Temperature Below Quantile|percentDaysMaxTempBelowQuantile|Percentage of Days Maximum Temperature Below Quantile|percentDaysMinTempAboveQuantile|Percentage of Days Minimum Temperature Above Quantile|percentDaysMaxTempAboveQuantile|Percentage of Days Maximum Temperature Above Quantile'
-                      ,x = variable.all[z]) == TRUE)  {
+                      ,x = variable.all[z]
+                      ,ignore.case = TRUE) == TRUE)  {
       
       if ((any(grepl(pattern = 'temperatures.min'
                      ,x = colnames(dataToUse)
@@ -1030,7 +1053,8 @@ processClimateIndices <- function(dataToUse
       } 
       
       if (grepl(pattern = 'percentDaysMinTempBelowQuantile|Percentage of Days Minimum Temperature Below Quantile'
-                ,x = variable.all[z]) == TRUE) {
+                ,x = variable.all[z]
+                ,ignore.case = TRUE) == TRUE) {
         
         variable.all[z] <- 'percentDaysMinTempBelowQuantile'
         longname[z] <- 'Percentage of Days Minimum Temperature Below Quantile'
@@ -1039,7 +1063,8 @@ processClimateIndices <- function(dataToUse
           indexSpecificValue <- 10
         }
       } else if (grepl(pattern = 'percentDaysMaxTempBelowQuantile|Percentage of Days Maximum Temperature Below Quantile'
-                       ,x = variable.all[z]) == TRUE){
+                       ,x = variable.all[z]
+                       ,ignore.case = TRUE) == TRUE){
         
         variable.all[z] <- 'percentDaysMaxTempBelowQuantile'
         longname[z] <- 'Percentage of Days Maxinum Temperature Below Quantile'
@@ -1048,7 +1073,8 @@ processClimateIndices <- function(dataToUse
           indexSpecificValue <- 10
         }
       } else if (grepl(pattern = 'percentDaysMinTempAboveQuantile|Percentage of Days Minimum Temperature Above Quantile'
-                       ,x = variable.all[z]) == TRUE){
+                       ,x = variable.all[z]
+                       ,ignore.case = TRUE) == TRUE){
         
         variable.all[z] <- 'percentDaysMinTempAboveQuantile'
         longname[z] <- 'Percentage of Days Minimum Temperature Above Quantile'
@@ -1101,17 +1127,20 @@ processClimateIndices <- function(dataToUse
       dataToUse[,dayOfSeason := 1:.N,by = 'seasonNumber']
       
       if (grepl(pattern = 'percentDaysMinTempBelowQuantile'
-                ,x = variable.all[z]) == TRUE) {
+                ,x = variable.all[z]
+                ,ignore.case = TRUE) == TRUE) {
         
         dataToUse[temperatures.min.amount < min_temp,day_exceedThresh := TRUE]
         
       } else if (grepl(pattern = 'percentDaysMaxTempBelowQuantile'
-                       ,x = variable.all[z]) == TRUE){
+                       ,x = variable.all[z]
+                       ,ignore.case = TRUE) == TRUE){
         
         dataToUse[temperatures.max.amount < max_temp,day_exceedThresh := TRUE]
         
       } else if (grepl(pattern = 'percentDaysMinTempAboveQuantile'
-                       ,x = variable.all[z]) == TRUE){
+                       ,x = variable.all[z]
+                       ,ignore.case = TRUE) == TRUE){
         
         dataToUse[temperatures.min.amount > min_temp,day_exceedThresh := TRUE]
         
@@ -1137,7 +1166,8 @@ processClimateIndices <- function(dataToUse
       
       
     } else if (grepl(pattern = 'sumOfGDD|Sum of Growing Degree Days'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'gdd'
                     ,x = colnames(dataToUse)
@@ -1158,7 +1188,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,sumOfGDD.average := mean(sumOfGDD.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'sumOfPET|Sum of PET'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'pet'
                     ,x = colnames(dataToUse)
@@ -1179,7 +1210,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,sumOfPET.average := mean(sumOfPET.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'sumOfPrecip|Sum of Precipitation'
-                       ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'precipitation'
                     ,x = colnames(dataToUse)
@@ -1200,7 +1232,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,sumOfPrecip.average := mean(sumOfPrecip.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'sumOfSolar|Sum of Solar Radiation'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'solar'
                     ,x = colnames(dataToUse)
@@ -1213,7 +1246,7 @@ processClimateIndices <- function(dataToUse
       
       suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
       
-      dataToUse[,sumOSolar.amount := cumsum(solar.amount),by = 'seasonNumber']
+      dataToUse[,sumOfSolar.amount := cumsum(solar.amount),by = 'seasonNumber']
       
       dataToUse[,sumOfSolar.stdDev := sd(sumOfSolar.amount),by = 'day']
       dataToUse[,sumOfSolar.average := mean(sumOfSolar.amount), by = 'day']
@@ -1221,7 +1254,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,sumOfSolar.average := mean(sumOfSolar.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'averageMaxTemp|Average Maximum Temperature'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.max'
                     ,x = colnames(dataToUse)
@@ -1242,7 +1276,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,averageMaxTemp.average := mean(averageMaxTemp.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'averageMinTemp|Average Minimum Temperature'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'temperatures.min'
                     ,x = colnames(dataToUse)
@@ -1263,7 +1298,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,averageMinTemp.average := mean(averageMinTemp.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'averageMaxRH|Average Maximum Relative Humidity'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'relativeHumidity.max'
                     ,x = colnames(dataToUse)
@@ -1284,7 +1320,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,averageMaxRH.average := mean(averageMaxRH.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'averageMinRH|Average Minimum Relative Humidity'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'relativeHumidity.min'
                     ,x = colnames(dataToUse)
@@ -1305,7 +1342,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,averageMinRH.average := mean(averageMinRH.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'averageWind|Average Windspeed'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'wind.average'
                     ,x = colnames(dataToUse)
@@ -1326,7 +1364,8 @@ processClimateIndices <- function(dataToUse
       dataToUse[,averageWind.average := mean(averageWind.average,na.rm = TRUE), by = 'day']
       
     } else if (grepl(pattern = 'maxWindGust|Maximum Wind Gust Speed'
-                     ,x = variable.all[z]) == TRUE)  {
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
       
       if (any(grepl(pattern = 'wind.dayMax'
                     ,x = colnames(dataToUse)

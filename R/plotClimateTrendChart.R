@@ -23,7 +23,7 @@
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
 #'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, maxOfAccumulatedGdd,
-#'   maxOfAccumulatedPet, sumOfGdd, sumOfPET, sumOfPrecip, sumOfSolar, averageMaxTemp, 
+#'   maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfSolar, averageMaxTemp, 
 #'   averageMinTemp, averageMaxRH, averageMinRH,averageWind, and maxWindGust
 #' @param season.monthDay_start Specify the start month-day combination of the "season"
 #'   you want analyzed (optional)

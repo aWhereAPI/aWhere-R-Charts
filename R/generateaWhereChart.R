@@ -123,6 +123,13 @@ generateaWhereChart <- function(data
   #expectations 
   dataToUse <- data.table::as.data.table(copy(data))
   
+  #If the date column is a date we want to cast it to a date object.  If the date column is just years don't
+  if (all(dataToUse[,grepl('^\\d{4}$',date)]) == FALSE) {
+    isTrendLine <- FALSE
+  } else {
+    isTrendLine <- TRUE
+  }
+  
   #Subset the data if the user specifies
   if (is.null(day_start) == FALSE) {
     dataToUse <- dataToUse[date >= as.Date(day_start)]
@@ -225,24 +232,26 @@ generateaWhereChart <- function(data
   #for each variable to be plotted, loop through to create data structures for visualization
   for (x in 1:length(variable)) {
     
-    #rename variable to match appropriate column in data
-    if (variable[[x]] == 'maxTemp') {
-      variable[[x]] <- 'temperatures.max'
-    } else if (variable[[x]] == 'minTemp') {
-      variable[[x]] <- 'temperatures.min'
-    } else if (variable[[x]] == 'maxRH') {
-      variable[[x]] <- 'relativeHumidity.max'
-    } else if (variable[[x]] == 'minRH') {
-      variable[[x]] <- 'relativeHumidity.min'
-    } else if (variable[[x]] == 'averageWind') {
-      variable[[x]] <- 'wind.average'
-    } else if (variable[[x]] == 'dayMaxWind') {
-      variable[[x]] <- 'wind.dayMax'
-    } else if (variable[[x]] == 'rollingavgppet') {
-      variable[[x]] <- 'ppet'
-      doRoll <- TRUE
+    if (isTrendLine == FALSE) {
+      #rename variable to match appropriate column in data
+      if (variable[[x]] == 'maxTemp') {
+        variable[[x]] <- 'temperatures.max'
+      } else if (variable[[x]] == 'minTemp') {
+        variable[[x]] <- 'temperatures.min'
+      } else if (variable[[x]] == 'maxRH') {
+        variable[[x]] <- 'relativeHumidity.max'
+      } else if (variable[[x]] == 'minRH') {
+        variable[[x]] <- 'relativeHumidity.min'
+      } else if (variable[[x]] == 'averageWind') {
+        variable[[x]] <- 'wind.average'
+      } else if (variable[[x]] == 'dayMaxWind') {
+        variable[[x]] <- 'wind.dayMax'
+      } else if (variable[[x]] == 'rollingavgppet') {
+        variable[[x]] <- 'ppet'
+        doRoll <- TRUE
+      }
     }
-    
+  
     #Confirm chosen variable is in the data structure
     if (any(grepl(pattern = variable[[x]]
                   ,x = colnames(dataToUse)
@@ -458,13 +467,11 @@ generateaWhereChart <- function(data
     }
 
     #If the date column is a date we want to cast it to a date object.  If the date column is just years don't
-    if (all(chart_data[[x]][,grepl('^\\d{4}$',date)]) == FALSE) {
+    if (isTrendLine == FALSE) {
       #convert character date column to Date
       chart_data[[x]][,date :=as.Date(date)]
-      isTrendLine <- FALSE
     } else {
       variableNames[[x]] <- setdiff(variableNames[[x]],'LTN')
-      isTrendLine <- TRUE
     }
 
     
