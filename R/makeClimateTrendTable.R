@@ -118,7 +118,8 @@ makeClimateTrendTable <- function(data
   title <- gsub(pattern = 'LTN calculated between \\d{4} and \\d{4}', replacement = 'Data Summarized by Season Start Year',title)
   
   
-  tempData %>% 
+  out <- 
+    tempData %>% 
     kableExtra::kbl(caption = title, booktabs = F) %>%
     kableExtra::kable_styling(bootstrap_options = c("hover","condensed"), full_width = F) %>%
     kableExtra::save_kable(file = filename)
