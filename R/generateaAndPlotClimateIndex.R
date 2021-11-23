@@ -22,9 +22,9 @@
 #'   dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd as well as 
-#'   accumulatedPet, accumulatedPpet,accumulatedPrecipitation, gdd, pet, precipitation, maxRH, minRH,
-#'   solar,averageWind,dayMaxWind, rollingavgppet, maxTemp, minTemp, dayMaxWind, averageWind
+#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd, maxOfAccumulatedGdd,
+#'   maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfSolar, sumOfPOverPET, averageMaxTemp, 
+#'   averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGust
 #' @param variable_rightAxis  What variable to plot over the primary variable.
 #'   The right y-axis of the plot will be used to present its range. Note that
 #'   it will always be plotted as a line chart. Same valid values as the

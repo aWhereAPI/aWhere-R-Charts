@@ -21,7 +21,7 @@
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
 #'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, maxOfAccumulatedGdd,
-#'   maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfSolar, averageMaxTemp, 
+#'   maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfSolar, sumOfPOverPET, averageMaxTemp, 
 #'   averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGust
 #'   
 #' @param variable_rightAxis  What variable to plot over the primary variable.
@@ -941,18 +941,14 @@ processClimateIndices <- function(dataToUse
                 ,ignore.case = TRUE) == TRUE) {
         
         dataToUse[,warmSpellDurIndex.amount := cumsum(spell_int), by = 'seasonNumber']
-        # dataToUse[lubridate::year(date) %in% years.LTN,warmSpellDurIndex.stdDev := sd(warmSpellDurIndex.amount),by = 'day']
-        # dataToUse[lubridate::year(date) %in% years.LTN,warmSpellDurIndex.average := mean(warmSpellDurIndex.amount), by = 'day']
-        
+
         dataToUse[,warmSpellDurIndex.stdDev := sd(warmSpellDurIndex.amount),by = 'day']
         dataToUse[,warmSpellDurIndex.average := mean(warmSpellDurIndex.amount), by = 'day']
         
         dataToUse[,warmSpellDurIndex.average := mean(warmSpellDurIndex.average,na.rm = TRUE), by = 'day']
         
       } else {
-        dataToUse[,coldSpellDurIndex.amount := cumsum(spell_int)]
-        # dataToUse[lubridate::year(date) %in% years.LTN,coldSpellDurIndex.stdDev := sd(coldSpellDurIndex.amount),by = 'day']
-        # dataToUse[lubridate::year(date) %in% years.LTN,coldSpellDurIndex.average := mean(coldSpellDurIndex.amount), by = 'day']
+        dataToUse[,coldSpellDurIndex.amount := cumsum(spell_int), by = 'seasonNumber']
         
         dataToUse[,coldSpellDurIndex.stdDev := sd(coldSpellDurIndex.amount),by = 'day']
         dataToUse[,coldSpellDurIndex.average := mean(coldSpellDurIndex.amount), by = 'day']
@@ -992,9 +988,6 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,precipSumExceedPercentile.amount := cumsum(temp_precip),by = 'seasonNumber']
       
-      # dataToUse[lubridate::year(date) %in% years.LTN,precipSumExceedPercentile.stdDev := sd(precipSumExceedPercentile.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,precipSumExceedPercentile.average := mean(precipSumExceedPercentile.amount), by = 'day']
-      
       dataToUse[,precipSumExceedPercentile.stdDev := sd(precipSumExceedPercentile.amount),by = 'day']
       dataToUse[,precipSumExceedPercentile.average := mean(precipSumExceedPercentile.amount), by = 'day']
       
@@ -1027,10 +1020,7 @@ processClimateIndices <- function(dataToUse
       dataToUse[,temp := FALSE]
       dataToUse[precipitation.amount > indexSpecificValue, temp := TRUE]
       
-      dataToUse[,countDaysPrecipExceedAmount.amount := cumsum(temp),by = 'seasonNumber']
-      
-      # dataToUse[lubridate::year(date) %in% years.LTN,countDaysPrecipExceedAmount.stdDev := sd(countDaysPrecipExceedAmount.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,countDaysPrecipExceedAmount.average := mean(countDaysPrecipExceedAmount.amount), by = 'day']
+      dataToUse[,countDaysPrecipExceedAmount.amount := cumsum(temp),by = 'seasonNumber']ß
       
       dataToUse[,countDaysPrecipExceedAmount.stdDev := sd(countDaysPrecipExceedAmount.amount),by = 'day']
       dataToUse[,countDaysPrecipExceedAmount.average := mean(countDaysPrecipExceedAmount.amount), by = 'day']
@@ -1230,6 +1220,42 @@ processClimateIndices <- function(dataToUse
       dataToUse[,sumOfPrecip.average := mean(sumOfPrecip.amount), by = 'day']
       
       dataToUse[,sumOfPrecip.average := mean(sumOfPrecip.average,na.rm = TRUE), by = 'day']
+      
+    } else if (grepl(pattern = 'sumOfPOverPET|Sum of Precipitation over PET'
+                     ,x = variable.all[z]
+                     ,ignore.case = TRUE) == TRUE)  {
+      
+      if (any(grepl(pattern = 'precipitation|pet'
+                    ,x = colnames(dataToUse)
+                    ,fixed = FALSE)) == FALSE) {
+        stop("Precipitation and PET data required to calculate the index 'Sum Of Precipitation over PET'")
+      }
+      
+      variable.all[z] <- 'sumOfPOverPET'
+      longname[z] <- 'Sum of Precipitation over PET'
+      
+      suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
+      
+      dataToUse[,c('sumOfPrecip.amount','sumOfPET.amount') := 0]
+      
+      dataToUse[,sumOfPrecip.amount := cumsum(precipitation.amount),by = 'seasonNumber']
+      dataToUse[,sumOfPET.amount    := cumsum(pet.amount),by = 'seasonNumber']
+      
+      dataToUse[,sumOfPrecip.amount := zoo::na.locf(sumOfPrecip.amount), by = 'seasonNumber']
+      dataToUse[,sumOfPET.amount := zoo::na.locf(sumOfPET.amount), by = 'seasonNumber']
+      
+      dataToUse[is.na(sumOfPrecip.amount), sumOfPrecip.amount := 0]
+      dataToUse[is.na(sumOfPET.amount), sumOfPET.amount := 0]
+      
+      dataToUse[,sumOfPET.amount := 0]
+      dataToUse[sumOfPET.amount > 0 ,sumOfPOverPET.amount := sumOfPrecip.amount / sumOfPET.amount]
+      
+      dataToUse[,sumOfPOverPET.stdDev := sd(sumOfPOverPET.amount),by = 'day']
+      dataToUse[,sumOfPOverPET.average := mean(sumOfPOverPET.amount), by = 'day']
+      
+      dataToUse[,sumOfPOverPET.average := mean(sumOfPOverPET.average,na.rm = TRUE), by = 'day']
+      
+      dataToUse[,c('sumOfPrecip.amount','sumOfPET.amount') := NULL]
       
     } else if (grepl(pattern = 'sumOfSolar|Sum of Solar Radiation'
                      ,x = variable.all[z]

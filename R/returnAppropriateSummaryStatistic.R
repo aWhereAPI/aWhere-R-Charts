@@ -13,7 +13,7 @@
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
 #'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, maxOfAccumulatedGdd,
-#'   maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfSolar, averageMaxTemp, 
+#'   maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfPOverPET, sumOfSolar, averageMaxTemp, 
 #'   averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGusts
 #'  
 #' @return string
