@@ -1202,7 +1202,7 @@ processClimateIndices <- function(dataToUse
       dataToUse[is.na(sumOfPrecip.amount), sumOfPrecip.amount := 0]
       dataToUse[is.na(sumOfPET.amount), sumOfPET.amount := 0]
       
-      dataToUse[,sumOfPET.amount := 0]
+      dataToUse[,sumOfPOverPET.amount := 0]
       dataToUse[sumOfPET.amount > 0 ,sumOfPOverPET.amount := sumOfPrecip.amount / sumOfPET.amount]
       
       dataToUse[,sumOfPOverPET.stdDev := sd(sumOfPOverPET.amount),by = 'day']
