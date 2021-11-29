@@ -15,7 +15,8 @@
 #'
 #' @param data data frame in which variables are named according to the schema
 #'   output by generateaWhereDataset.R (required)
-#' @param filename filename for output image (required)   
+#' @param filename filename for output image.  Periods are not allowed except before file
+#'    type (required)   
 #' @param variable character string denoting the variable to chart. Acceptable
 #'   values are maxLenDrySpell, maxLenWetSpell, numFrostDays, numSummerDays, numIcingDays,
 #'   numTropicalNights, minOfMaxTemp, maxOfMaxTemp, minOfMinTemp, maxOfMinTemp,
@@ -37,9 +38,9 @@
 #'   (optional)
 #' @param e_threshold numeric value (in milimeters) for the daily maximum used
 #'   to calculate effective precipitation if e_precip is set to TRUE. (optional)
-#' @param doRoll apply a rolling average to the calculation.
-#' @param rolling_window numeric value for the number of days to use in rolling
-#'   average calculations.  Default value is 30. (optional)
+#' @param writeOutTableData Boolean for whether the underlying data in the table
+#'   should be written to CSV.  File name will match the value of the "filename"
+#'   parameter with .csv file type (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
 #'   can override the default value of the index using this parameter (optional)
 #'
@@ -52,14 +53,13 @@
 #'
 #' @examples
 #' \dontrun{makeClimateTrendTable(data = weather_df
+#'                                ,filename = 'test.png'
 #'                                ,variable = "seasonTotalPrecip"
-#'                                ,startYearOfSeasonToPlot = 2020
 #'                                ,season.monthDay_start = '09-01'
 #'                                ,season.monthDay_end = '11-30'
 #'                                ,years.LTN = seq(2010,2019,1)
 #'                                ,e_precip = TRUE
-#'                                ,e_threshold = 10
-#'                                ,doRoll = TRUE)}
+#'                                ,e_threshold = 10)}
 #'
 #' @export
 
@@ -71,7 +71,8 @@ makeClimateTrendTable <- function(data
                                   ,years.LTN = seq(2006,2020,1)
                                   ,title = NULL
                                   ,e_precip = FALSE 
-                                  ,e_threshold = 35 
+                                  ,e_threshold = 35
+                                  ,writeOutTableData = TRUE
                                   ,indexSpecificValue = NULL) {
   
   if (webshot::is_phantomjs_installed() == FALSE) {
@@ -117,12 +118,15 @@ makeClimateTrendTable <- function(data
   title <- gsub(pattern = 'Current Year is \\d{4}\n',replacement = '',title)
   title <- gsub(pattern = 'LTN calculated between \\d{4} and \\d{4}', replacement = 'Data Summarized by Season Start Year',title)
   
+  if (writeOutTableData == TRUE) {
+    data.table::fwrite(tempData,file = paste0(strsplit(filename,'.',fixed = TRUE)[[1]][1],'.csv'))
+  }
   
   out <- 
     tempData %>% 
     kableExtra::kbl(caption = title, booktabs = F) %>%
     kableExtra::kable_styling(bootstrap_options = c("hover","condensed"), full_width = F) %>%
-    kableExtra::save_kable(file = filename)
+    kableExtra::save_kable(file = paste0(strsplit(filename,'.',fixed = TRUE)[[1]][1],'.png'))
    #            density = 600, zoom = 2)
   
   return(out)
