@@ -461,9 +461,6 @@ processClimateIndices <- function(dataToUse
         
         setnames(dataToUse,c('counter.current'),c('maxLenDrySpell.amount'))
         
-        # dataToUse[lubridate::year(date) %in% years.LTN,maxLenDrySpell.stdDev := sd(maxLenDrySpell.amount,na.rm = TRUE),by = 'day']
-        # dataToUse[lubridate::year(date) %in% years.LTN,maxLenDrySpell.average := mean(maxLenDrySpell.amount), by = 'day']
-        
         dataToUse[,maxLenDrySpell.stdDev := sd(maxLenDrySpell.amount,na.rm = TRUE),by = 'day']
         dataToUse[,maxLenDrySpell.average := mean(maxLenDrySpell.amount), by = 'day']
         
@@ -472,9 +469,6 @@ processClimateIndices <- function(dataToUse
       } else {
         
         setnames(dataToUse,c('counter.current'),c('maxLenWetSpell.amount'))
-        
-        # dataToUse[lubridate::year(date) %in% years.LTN,maxLenWetSpell.stdDev := sd(maxLenWetSpell.amount,na.rm = TRUE),by = 'day']
-        # dataToUse[lubridate::year(date) %in% years.LTN,maxLenWetSpell.average := mean(maxLenWetSpell.amount), by = 'day']
         
         dataToUse[,maxLenWetSpell.stdDev := sd(maxLenWetSpell.amount,na.rm = TRUE),by = 'day']
         dataToUse[,maxLenWetSpell.average := mean(maxLenWetSpell.amount), by = 'day']
@@ -507,9 +501,6 @@ processClimateIndices <- function(dataToUse
       dataToUse[temperatures.min.amount < indexSpecificValue, isFrostDay := TRUE]
       dataToUse[,numFrostDays.amount := cumsum(isFrostDay),by = 'seasonNumber']
       
-      # dataToUse[lubridate::year(date) %in% years.LTN,numFrostDays.stdDev := sd(numFrostDays.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,numFrostDays.average := mean(numFrostDays.amount), by = 'day']
-      
       dataToUse[,numFrostDays.stdDev := sd(numFrostDays.amount),by = 'day']
       dataToUse[,numFrostDays.average := mean(numFrostDays.amount), by = 'day']
       
@@ -539,9 +530,6 @@ processClimateIndices <- function(dataToUse
       dataToUse[,isSummerDay := FALSE]
       dataToUse[temperatures.max.amount > indexSpecificValue, isSummerDay := TRUE]
       dataToUse[,numSummerDays.amount := cumsum(isSummerDay),by = 'seasonNumber']
-      
-      # dataToUse[lubridate::year(date) %in% years.LTN,numSummerDays.stdDev := sd(numSummerDays.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,numSummerDays.average := mean(numSummerDays.amount), by = 'day']
       
       dataToUse[,numSummerDays.stdDev := sd(numSummerDays.amount),by = 'day']
       dataToUse[,numSummerDays.average := mean(numSummerDays.amount), by = 'day']
@@ -573,9 +561,6 @@ processClimateIndices <- function(dataToUse
       dataToUse[temperatures.max.amount < indexSpecificValue, isIcingDay := TRUE]
       dataToUse[,numIcingDays.amount := cumsum(isIcingDay),by = 'seasonNumber']
       
-      # dataToUse[lubridate::year(date) %in% years.LTN,numIcingDays.stdDev := sd(numIcingDays.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,numIcingDays.average := mean(numIcingDays.amount), by = 'day']
-      
       dataToUse[,numIcingDays.stdDev := sd(numIcingDays.amount),by = 'day']
       dataToUse[,numIcingDays.average := mean(numIcingDays.amount), by = 'day']
       
@@ -606,9 +591,6 @@ processClimateIndices <- function(dataToUse
       dataToUse[temperatures.min.amount > indexSpecificValue, isTropicalNight := TRUE]
       dataToUse[,numTropicalNights.amount := cumsum(isTropicalNight),by = 'seasonNumber']
       
-      # dataToUse[lubridate::year(date) %in% years.LTN,numTropicalNights.stdDev := sd(numTropicalNights.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,numTropicalNights.average := mean(numTropicalNights.amount), by = 'day']
-      
       dataToUse[,numTropicalNights.stdDev := sd(numTropicalNights.amount),by = 'day']
       dataToUse[,numTropicalNights.average := mean(numTropicalNights.amount), by = 'day']
       
@@ -632,9 +614,6 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,minOfMaxTemp.amount := cummin(temperatures.max.amount),by = 'seasonNumber']
       
-      # dataToUse[lubridate::year(date) %in% years.LTN,minOfMaxTemp.stdDev := sd(minOfMaxTemp.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,minOfMaxTemp.average := mean(minOfMaxTemp.amount), by = 'day']
-      
       dataToUse[,minOfMaxTemp.stdDev := sd(minOfMaxTemp.amount),by = 'day']
       dataToUse[,minOfMaxTemp.average := mean(minOfMaxTemp.amount), by = 'day']
       
@@ -656,9 +635,6 @@ processClimateIndices <- function(dataToUse
       suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
       
       dataToUse[,maxOfMaxTemp.amount := cummax(temperatures.max.amount),by = 'seasonNumber']
-      
-      # dataToUse[lubridate::year(date) %in% years.LTN,maxOfMaxTemp.stdDev := sd(maxOfMaxTemp.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,maxOfMaxTemp.average := mean(maxOfMaxTemp.amount), by = 'day']
       
       dataToUse[,maxOfMaxTemp.stdDev := sd(maxOfMaxTemp.amount),by = 'day']
       dataToUse[,maxOfMaxTemp.average := mean(maxOfMaxTemp.amount), by = 'day']
@@ -682,9 +658,6 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[,minOfMinTemp.amount := cummin(temperatures.min.amount),by = 'seasonNumber']
       
-      # dataToUse[lubridate::year(date) %in% years.LTN,minOfMinTemp.stdDev := sd(minOfMinTemp.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,minOfMinTemp.average := mean(minOfMinTemp.amount), by = 'day']
-      
       dataToUse[,minOfMinTemp.stdDev := sd(minOfMinTemp.amount),by = 'day']
       dataToUse[,minOfMinTemp.average := mean(minOfMinTemp.amount), by = 'day']
       
@@ -706,9 +679,6 @@ processClimateIndices <- function(dataToUse
       suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
       
       dataToUse[,maxOfMinTemp.amount := cummax(temperatures.min.amount),by = 'seasonNumber']
-      
-      # dataToUse[lubridate::year(date) %in% years.LTN,maxOfMinTemp.stdDev := sd(maxOfMinTemp.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,maxOfMinTemp.average := mean(maxOfMinTemp.amount), by = 'day']
       
       dataToUse[,maxOfMinTemp.stdDev := sd(maxOfMinTemp.amount),by = 'day']
       dataToUse[,maxOfMinTemp.average := mean(maxOfMinTemp.amount), by = 'day']
@@ -737,9 +707,6 @@ processClimateIndices <- function(dataToUse
       dataToUse[,temp := temperatures.max.amount - temperatures.min.amount]
       dataToUse[,dailyTempRange.amount := cumsum(temp)/dayInSeason, by = 'seasonNumber']
       
-      # dataToUse[lubridate::year(date) %in% years.LTN,dailyTempRange.stdDev := sd(dailyTempRange.amount), by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,dailyTempRange.average := mean(dailyTempRange.amount), by = 'day']
-      
       dataToUse[,dailyTempRange.stdDev := sd(dailyTempRange.amount), by = 'day']
       dataToUse[,dailyTempRange.average := mean(dailyTempRange.amount), by = 'day']
       
@@ -762,9 +729,6 @@ processClimateIndices <- function(dataToUse
       suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
       
       dataToUse[,maxSingleDayPrecip.amount := cummax(precipitation.amount),by = 'seasonNumber']
-      
-      # dataToUse[lubridate::year(date) %in% years.LTN,maxSingleDayPrecip.stdDev := sd(maxSingleDayPrecip.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,maxSingleDayPrecip.average := mean(maxSingleDayPrecip.amount), by = 'day']
       
       dataToUse[,maxSingleDayPrecip.stdDev := sd(maxSingleDayPrecip.amount),by = 'day']
       dataToUse[,maxSingleDayPrecip.average := mean(maxSingleDayPrecip.amount), by = 'day']
@@ -790,9 +754,6 @@ processClimateIndices <- function(dataToUse
       
       dataToUse[!is.na(temp),max5ConsDayPrecip.amount := cummax(temp),by = 'seasonNumber']
       
-      # dataToUse[lubridate::year(date) %in% years.LTN,max5ConsDayPrecip.stdDev := sd(max5ConsDayPrecip.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,max5ConsDayPrecip.average := mean(max5ConsDayPrecip.amount), by = 'day']
-      
       dataToUse[,max5ConsDayPrecip.stdDev := sd(max5ConsDayPrecip.amount),by = 'day']
       dataToUse[,max5ConsDayPrecip.average := mean(max5ConsDayPrecip.amount), by = 'day']
       
@@ -816,9 +777,6 @@ processClimateIndices <- function(dataToUse
       suppressWarnings(dataToUse[,paste0(variable.all[z],c('.amount','.average','.stdDev')) := NULL])
       
       dataToUse[,seasonTotalPrecip.amount := cumsum(precipitation.amount),by = 'seasonNumber']
-      
-      # dataToUse[lubridate::year(date) %in% years.LTN,seasonTotalPrecip.stdDev := sd(seasonTotalPrecip.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,seasonTotalPrecip.average := mean(seasonTotalPrecip.amount), by = 'day']
       
       dataToUse[,seasonTotalPrecip.stdDev := sd(seasonTotalPrecip.amount),by = 'day']
       dataToUse[,seasonTotalPrecip.average := mean(seasonTotalPrecip.amount), by = 'day']
@@ -855,9 +813,6 @@ processClimateIndices <- function(dataToUse
       dataToUse[,temp := cumsum(precip.temp),by = 'seasonNumber']
       
       dataToUse[,simplePrecipIntensityIndex.amount := temp/count.tempCol,by = 'seasonNumber']
-      
-      # dataToUse[lubridate::year(date) %in% years.LTN,simplePrecipIntensityIndex.stdDev := sd(simplePrecipIntensityIndex.amount),by = 'day']
-      # dataToUse[lubridate::year(date) %in% years.LTN,simplePrecipIntensityIndex.average := mean(simplePrecipIntensityIndex.amount), by = 'day']
       
       dataToUse[,simplePrecipIntensityIndex.stdDev := sd(simplePrecipIntensityIndex.amount),by = 'day']
       dataToUse[,simplePrecipIntensityIndex.average := mean(simplePrecipIntensityIndex.amount), by = 'day']
@@ -1020,7 +975,7 @@ processClimateIndices <- function(dataToUse
       dataToUse[,temp := FALSE]
       dataToUse[precipitation.amount > indexSpecificValue, temp := TRUE]
       
-      dataToUse[,countDaysPrecipExceedAmount.amount := cumsum(temp),by = 'seasonNumber']ß
+      dataToUse[,countDaysPrecipExceedAmount.amount := cumsum(temp),by = 'seasonNumber']
       
       dataToUse[,countDaysPrecipExceedAmount.stdDev := sd(countDaysPrecipExceedAmount.amount),by = 'day']
       dataToUse[,countDaysPrecipExceedAmount.average := mean(countDaysPrecipExceedAmount.amount), by = 'day']
