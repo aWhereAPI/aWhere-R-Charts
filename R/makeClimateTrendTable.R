@@ -72,7 +72,7 @@ makeClimateTrendTable <- function(data
                                   ,title = NULL
                                   ,e_precip = FALSE 
                                   ,e_threshold = 35
-                                  ,writeOutTableData = TRUE
+                                  ,writeOutTableData = FALSE
                                   ,indexSpecificValue = NULL) {
   
   if (webshot::is_phantomjs_installed() == FALSE) {
