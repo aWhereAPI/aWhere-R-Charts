@@ -71,7 +71,7 @@ list
 \code{processClimateIndices} Process aWhere weather data to generate climate indices
 }
 \details{
-This function \extends the aWhere charts package to generate the ETCCDI climate
+This function extends the aWhere charts package to generate the ETCCDI climate
 change indices (reference below).  Most indices are implement with the default behavior 
 described int he publication.  Default values of the indices can be overriden using the 
 "indexSpecificValue" parameter.
