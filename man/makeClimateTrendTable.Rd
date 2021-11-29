@@ -14,6 +14,7 @@ makeClimateTrendTable(
   title = NULL,
   e_precip = FALSE,
   e_threshold = 35,
+  writeOutTableData = TRUE,
   indexSpecificValue = NULL
 )
 }
@@ -21,7 +22,8 @@ makeClimateTrendTable(
 \item{data}{data frame in which variables are named according to the schema
 output by generateaWhereDataset.R (required)}
 
-\item{filename}{filename for output image (required)}
+\item{filename}{filename for output image.  Periods are not allowed except before file
+type (required)}
 
 \item{variable}{character string denoting the variable to chart. Acceptable
 values are maxLenDrySpell, maxLenWetSpell, numFrostDays, numSummerDays, numIcingDays,
@@ -51,13 +53,12 @@ calculated and charted based on e_threshold. Default is set to FALSE.
 \item{e_threshold}{numeric value (in milimeters) for the daily maximum used
 to calculate effective precipitation if e_precip is set to TRUE. (optional)}
 
+\item{writeOutTableData}{Boolean for whether the underlying data in the table
+should be written to CSV.  File name will match the value of the "filename"
+parameter with .csv file type (optional)}
+
 \item{indexSpecificValue}{For the Climate Indices this tool can plot the user
 can override the default value of the index using this parameter (optional)}
-
-\item{doRoll}{apply a rolling average to the calculation.}
-
-\item{rolling_window}{numeric value for the number of days to use in rolling
-average calculations.  Default value is 30. (optional)}
 }
 \value{
 plot object
@@ -77,14 +78,13 @@ but needed data and store in the aWhereEnv to persist it throughout a user R ses
 }
 \examples{
 \dontrun{makeClimateTrendTable(data = weather_df
+                               ,filename = 'test.png'
                                ,variable = "seasonTotalPrecip"
-                               ,startYearOfSeasonToPlot = 2020
                                ,season.monthDay_start = '09-01'
                                ,season.monthDay_end = '11-30'
                                ,years.LTN = seq(2010,2019,1)
                                ,e_precip = TRUE
-                               ,e_threshold = 10
-                               ,doRoll = TRUE)}
+                               ,e_threshold = 10)}
 
 }
 \references{
