@@ -441,7 +441,10 @@ processClimateIndices <- function(dataToUse
       #Set FALSE entries to NA
       dataToUse[tempCol.current == FALSE, counter.current := as.numeric(NA)]
       
-      #Creating a grouping variable for each FALSE period
+      #initialize the column so that the line below doesn't fail if there are no valid rows to act on
+      dataToUse[,group.current := as.numeric(NA)]
+      
+      #Creating a grouping variable for each TRUE period
       dataToUse[tempCol.current == TRUE & counter.current == 1, group.current := 1:.N, by = 'seasonNumber']
       
       #Carry grouping variable forwards
@@ -452,6 +455,8 @@ processClimateIndices <- function(dataToUse
       
       #Find the max dry length for each period
       suppressWarnings(dataToUse[,counter.current := max(counter.current,na.rm = TRUE),by = c('group.current','seasonNumber')])
+      
+      dataToUse[counter.current == Inf | counter.current == -Inf, counter.current := 0]
       
       suppressWarnings(dataToUse[,c('tempCol.current','tempCol.ltn','group.current') := NULL])
       
