@@ -320,10 +320,10 @@ generateaWhereChart <- function(data
               ,x = variable[[x]]
               ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'GDDs'
-    } else if (grepl(pattern = 'PPet'
+    } else if (grepl(pattern = 'PPet|P/PET'
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
-      ylabel[[x]] = 'Index'
+      ylabel[[x]] = 'P/PET'
     } else if (grepl(pattern = 'Pet'
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
