@@ -152,8 +152,7 @@ generateAndPlotClimateIndex <- function(data
                         ,size_font_axis_titles = size_font_axis_titles 
                         ,size_font_axis_labels = size_font_axis_labels
                         ,size_font_legend_entries = size_font_legend_entries
-                        ,line_width = line_width
-                        ,indexSpecificValue = indexSpecificValue)
+                        ,line_width = line_width)
 
   return(out)
 }

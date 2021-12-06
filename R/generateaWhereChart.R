@@ -320,7 +320,7 @@ generateaWhereChart <- function(data
               ,x = variable[[x]]
               ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'GDDs'
-    } else if (grepl(pattern = 'PPet|P/PET'
+    } else if (grepl(pattern = 'PPet|P/PET|PoverPET'
                      ,x = variable[[x]]
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = 'P/PET'
@@ -373,7 +373,6 @@ generateaWhereChart <- function(data
                      ,ignore.case = TRUE) == TRUE) {
       ylabel[[x]] = '% of Days'
     }
-
     
     #filter out relevant data
     chart_data[[x]] <- dataToUse[, c("date", varsToChart[[x]]),with = FALSE]
