@@ -12,7 +12,7 @@
 #'   dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 #'   precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 #'   countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, maxOfAccumulatedGdd,
+#'   percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile,
 #'   maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfPOverPET, sumOfSolar, averageMaxTemp, 
 #'   averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGusts
 #'  
