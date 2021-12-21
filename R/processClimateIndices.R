@@ -312,7 +312,9 @@ processClimateIndices <- function(dataToUse
   
     years.LTN <- intersect(years.LTN,unique(temp[,lubridate::year(date)]))
     
-    stop('Current settings result in no LTN data being plotted.  Must include at least one year of data in stated LTN period\n')
+    if (length(years.LTN) == 0) {
+      stop('Current settings result in no LTN data being plotted.  Must include at least one year of data in stated LTN period\n')
+    }
   }
   
   #####################################################################################
