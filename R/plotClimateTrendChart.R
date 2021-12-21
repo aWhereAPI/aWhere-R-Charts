@@ -59,14 +59,14 @@
 #' @return plot object
 #'
 #' @examples
-#' \dontrun{generateAndPlotClimateIndex(data = weather_df
-#'                                      ,variable = "seasonTotalPrecip"
-#'                                      ,season.monthDay_start = '09-01'
-#'                                      ,season.monthDay_end = '11-30'
-#'                                      ,years.LTN = seq(2010,2019,1)
-#'                                      ,e_precip = TRUE
-#'                                      ,e_threshold = 10
-#'                                      ,doRoll = TRUE)}
+#' \dontrun{plotClimateTrendChart(data = weather_df
+#'                                ,variable = "seasonTotalPrecip"
+#'                                ,season.monthDay_start = '09-01'
+#'                                ,season.monthDay_end = '11-30'
+#'                                ,years.LTN = seq(2010,2019,1)
+#'                                ,e_precip = TRUE
+#'                                ,e_threshold = 10
+#'                                ,doRoll = TRUE)}
 #'
 #' @export
 
@@ -104,7 +104,7 @@ plotClimateTrendChart <- function(data
                           ,e_precip = e_precip 
                           ,e_threshold = e_threshold
                           ,indexSpecificValue = indexSpecificValue
-                          ,offline_mode = offline_modes)
+                          ,offline_mode = offline_mode)
   
   dataToUse <- out.list[[1]]
   variable.all <- out.list[[2]]

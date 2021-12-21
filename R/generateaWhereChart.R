@@ -117,7 +117,6 @@ generateaWhereChart <- function(data
   colorScheme     <- list()
   rangeToUse      <- list()
   
-  
   #because we are going to change the datastructure and it is a data.table we
   #will explicitly copy what is passed in so it doesn't violate user's scoping
   #expectations 
@@ -137,6 +136,10 @@ generateaWhereChart <- function(data
   
   if (is.null(day_end) == FALSE) {
     dataToUse <- dataToUse[date <= as.Date(day_end)]
+  }
+  
+  if (nrow(dataToUse) == 0) {
+    stop('Current settings result in no data being plotted\n')
   }
   
   #What to call the SD entry in the legend if displayed

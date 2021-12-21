@@ -53,6 +53,7 @@
 #' @import dplyr
 #' @import zoo
 #' @import data.table
+#' @import lubridate
 #'
 #' @return list
 #'
@@ -108,11 +109,12 @@ processClimateIndices <- function(dataToUse
       lon.now <- unique(dataToUse[,longitude])
       
       #If data is for the same location we can add.  Its not a problem if its for a different date range
-      if (length(lat.prev) == 1 & length(lon.prev) == 1 & 
-          lat.prev == lat.now & lon.prev == lon.now) {
-        dataToUse <- rbind(dataToUse,temp,use.names = TRUE,fill = TRUE)
+      if (length(lat.prev) == 1 & length(lon.prev) == 1) {
+        if(lat.prev == lat.now & lon.prev == lon.now) {
+          dataToUse <- rbind(dataToUse,temp,use.names = TRUE,fill = TRUE)
         
-        dataToUse <- unique(dataToUse, by = 'date')
+          dataToUse <- unique(dataToUse, by = 'date')
+        }
       }
     }
     
@@ -140,7 +142,7 @@ processClimateIndices <- function(dataToUse
   #yearsPresent <- dataToUse[,unique(lubridate::year(date))]
   #yearsNeeded <- sort(unique(c(yearsPresent,years.LTN)))
   
-  yearsNeeded <- sort(unique(years.LTN,startYearOfSeasonToPlot))
+  yearsNeeded <- sort(unique(c(years.LTN,startYearOfSeasonToPlot)))
   
   #handles data that goes over Jan 1st
   if (paste0('2020-',season.monthDay_start) > paste0('2020-',season.monthDay_end)) {
@@ -300,15 +302,17 @@ processClimateIndices <- function(dataToUse
     temp <- rbindlist(temp,use.names = TRUE,fill = TRUE)
   } else {
     
-    daysMissing <- setdiff(allDaysNeeded,dataToUse[,date])
+    daysMissing <- setdiff(dataToUse[,date],allDaysNeeded)
     
     if (length(daysMissing) > 0) {
       warning(paste0('Missing Data for the following dates: ',paste(as.Date(daysMissing,origin = '1970-01-01'),collapse = ', ')))
     }
     
-   
+    temp <- dataToUse[date %in% allDaysNeeded,]
+  
+    years.LTN <- intersect(years.LTN,unique(temp[,lubridate::year(date)]))
     
-    temp <- dataToUse[date %in% allDaysNeeded,colnames(dt,with = FALSE)]
+    stop('Current settings result in no LTN data being plotted.  Must include at least one year of data in stated LTN period\n')
   }
   
   #####################################################################################
@@ -330,13 +334,13 @@ processClimateIndices <- function(dataToUse
   
   ####################################################################################################
   #Assign season number properly
-  for (seasonCounter in 1:length(years.LTN)) {
+  for (seasonCounter in 1:length(yearsNeeded)) {
     
-    seasonStart.current <- paste0(years.LTN[seasonCounter],'-',season.monthDay_start)
-    seasonEnd.current <- paste0(years.LTN[seasonCounter],'-',season.monthDay_end)
+    seasonStart.current <- paste0(yearsNeeded[seasonCounter],'-',season.monthDay_start)
+    seasonEnd.current <- paste0(yearsNeeded[seasonCounter],'-',season.monthDay_end)
     
     if (seasonEnd.current < seasonStart.current) {
-      seasonEnd.current <- paste0((years.LTN[seasonCounter] + 1),'-',season.monthDay_end)
+      seasonEnd.current <- paste0((yearsNeeded[seasonCounter] + 1),'-',season.monthDay_end)
     }
     
     temp[date >= seasonStart.current & date <= seasonEnd.current, seasonNumber := seasonCounter]
@@ -396,9 +400,7 @@ processClimateIndices <- function(dataToUse
     dataToUse[precipitation.amount > e_threshold, precipitation.amount := e_threshold]
     dataToUse[,ppet.amount:= precipitation.amount/ pet.amount]
     
-    #NEED TO CODE THIS PORTION
     dataToUse[,accumulatedPrecipitation.amount := cumsum(precipitation.amount),by = 'seasonNumber']
-    
     dataToUse[,accumulatedPpet.amount := cumsum(accumulatedPrecipitation.amount/accumulatedPet.amount),by = 'seasonNumber']
   }
   
