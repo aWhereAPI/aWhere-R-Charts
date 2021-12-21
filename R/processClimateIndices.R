@@ -80,7 +80,7 @@ processClimateIndices <- function(dataToUse
 
   suppressWarnings(dataToUse[,seasonNumber := NULL])
   
-  if (offline_mode = TRUE) {
+  if (offline_mode == TRUE) {
     cat('Proceeding in Offline Mode, only using data contained within dataset used in function call \n')
   }
   

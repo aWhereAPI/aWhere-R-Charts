@@ -26,7 +26,8 @@ generateAndPlotClimateIndex(
   size_font_axis_labels = 12,
   size_font_legend_entries = 12,
   line_width = 1,
-  indexSpecificValue = NULL
+  indexSpecificValue = NULL,
+  offline_mode = FALSE
 )
 }
 \arguments{
@@ -39,7 +40,7 @@ numTropicalNights, minOfMaxTemp, maxOfMaxTemp, minOfMinTemp, maxOfMinTemp,
 dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd, maxOfAccumulatedGdd,
+percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantileaccumulatedGdd,
 maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfSolar, sumOfPOverPET, averageMaxTemp, 
 averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGust}
 
@@ -99,6 +100,9 @@ must be a two element vector of the form c(minValue, maxValue) (optional)}
 
 \item{indexSpecificValue}{For the Climate Indices this tool can plot the user
 can override the default value of the index using this parameter (optional)}
+
+\item{offline_mode}{Set to TRUE to work in offline mode and not attempt to fetch data
+from the aWhere API (optional)}
 
 \item{maingraphType}{Which type of graph to make for the main plot.  Valid
 values are "line" and "bar" (optional)}

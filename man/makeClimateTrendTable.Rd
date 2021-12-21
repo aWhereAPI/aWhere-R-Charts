@@ -14,8 +14,9 @@ makeClimateTrendTable(
   title = NULL,
   e_precip = FALSE,
   e_threshold = 35,
-  writeOutTableData = TRUE,
-  indexSpecificValue = NULL
+  writeOutTableData = FALSE,
+  indexSpecificValue = NULL,
+  offline_mode = FALSE
 )
 }
 \arguments{
@@ -59,6 +60,9 @@ parameter with .csv file type (optional)}
 
 \item{indexSpecificValue}{For the Climate Indices this tool can plot the user
 can override the default value of the index using this parameter (optional)}
+
+\item{offline_mode}{Set to TRUE to work in offline mode and not attempt to fetch data
+from the aWhere API (optional)}
 }
 \value{
 plot object

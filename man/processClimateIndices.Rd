@@ -15,7 +15,8 @@ processClimateIndices(
   title = NULL,
   e_precip = FALSE,
   e_threshold = 35,
-  indexSpecificValue = NULL
+  indexSpecificValue = NULL,
+  offline_mode = FALSE
 )
 }
 \arguments{
@@ -25,7 +26,7 @@ numTropicalNights, minOfMaxTemp, maxOfMaxTemp, minOfMinTemp, maxOfMinTemp,
 dailyTempRange, maxSingleDayPrecip, max5ConsDayPrecip, simplePrecipIntensityIndex,
 precipSumExceedPercentile, warmSpellDurIndex, coldSpellDurIndex,
 countDaysPrecipExceedAmount, percentDaysMinTempBelowQuantile, percentDaysMaxTempBelowQuantile,
-percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile, maxOfAccumulatedGdd,
+percentDaysMinTempAboveQuantile, percentDaysMaxTempAboveQuantile,
 maxOfAccumulatedPet, sumOfGDD, sumOfPET, sumOfPrecip, sumOfSolar, sumOfPOverPET, averageMaxTemp, 
 averageMinTemp, averageMaxRH, averageMinRH, averageWind, and maxWindGust}
 
@@ -60,6 +61,9 @@ to calculate effective precipitation if e_precip is set to TRUE. (optional)}
 
 \item{indexSpecificValue}{For the Climate Indices this tool can plot the user
 can override the default value of the index using this parameter (optional)}
+
+\item{offline_mode}{Set to TRUE to work in offline mode and not attempt to fetch data
+from the aWhere API (optional)}
 
 \item{data}{data frame in which variables are named according to the schema
 output by generateaWhereDataset.R (required)}

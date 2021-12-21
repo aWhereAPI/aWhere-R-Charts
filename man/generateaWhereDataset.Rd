@@ -42,7 +42,20 @@ at all times (optional)}
 \item{removeFeb29Data}{automatically remove Feb 29th data (optional)}
 }
 \value{
-dataframe
+dataframe with the following schema: latitude, longitude, date, day, 
+        accumulatedGdd.amount, accumulatedGdd.average, accumulatedGdd.stdDev, 
+        accumulatedPet.amount, accumulatedPet.average, accumulatedPet.stdDev, 
+        accumulatedPpet.amount, accumulatedPpet.average, accumulatedPpet.stdDev, 
+        accumulatedPrecipitation.amount, accumulatedPrecipitation.average, 
+        accumulatedPrecipitation.stdDev, gdd.amount, gdd.average, gdd.stdDev, 
+        pet.amount, pet.average, pet.stdDev, ppet.amount, ppet.average, ppet.stdDev, 
+        precipitation.amount, precipitation.average, precipitation.stdDev, 
+        relativeHumidity.max.amount, relativeHumidity.max.average, relativeHumidity.max.stdDev, 
+        relativeHumidity.min.amount, relativeHumidity.min.average, relativeHumidity.min.stdDev, 
+        solar.amount, solar.average, solar.stdDev, temperatures.max.amount, temperatures.max.average,
+        temperatures.max.stdDev, temperatures.min.amount, temperatures.min.average, 
+        temperatures.min.stdDev, wind.average.amount, wind.average.average, wind.average.stdDev, 
+        wind.dayMax.amount, wind.dayMax.average, wind.dayMax.stdDev
 }
 \description{
 \code{generateaWhereDataset} Generate a basic aWhere weather
