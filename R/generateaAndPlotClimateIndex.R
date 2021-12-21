@@ -65,6 +65,8 @@
 #' @param line_width Font size for line geometries on charts (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
 #'   can override the default value of the index using this parameter (optional)
+#' @param offline_mode Set to TRUE to work in offline mode and not attempt to fetch data
+#'   from the aWhere API (optional)   
 #'
 #' @import dplyr
 #' @import data.table
@@ -105,7 +107,8 @@ generateAndPlotClimateIndex <- function(data
                                       ,size_font_axis_labels = 12
                                       ,size_font_legend_entries = 12
                                       ,line_width = 1
-                                      ,indexSpecificValue = NULL) {
+                                      ,indexSpecificValue = NULL
+                                      ,offline_mode = FALSE) {
   
   #because we are going to change the datastructure and it is a data.table we
   #will explicitly copy what is passed in so it doesn't violate user's scoping
@@ -123,7 +126,8 @@ generateAndPlotClimateIndex <- function(data
                           ,title = title
                           ,e_precip = e_precip 
                           ,e_threshold = e_threshold
-                          ,indexSpecificValue = indexSpecificValue)
+                          ,indexSpecificValue = indexSpecificValue
+                          ,offline_mode = offline_mode)
   
   dataToUse <- out.list[[1]]
   variable.all <- out.list[[2]]

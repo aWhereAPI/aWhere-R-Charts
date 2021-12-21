@@ -47,6 +47,8 @@
 #'   to calculate effective precipitation if e_precip is set to TRUE. (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
 #'   can override the default value of the index using this parameter (optional)
+#' @param offline_mode Set to TRUE to work in offline mode and not attempt to fetch data
+#'   from the aWhere API (optional) 
 #'
 #' @import dplyr
 #' @import zoo
@@ -73,9 +75,14 @@ processClimateIndices <- function(dataToUse
                                   ,title = NULL
                                   ,e_precip = FALSE 
                                   ,e_threshold = 35 
-                                  ,indexSpecificValue = NULL) {
+                                  ,indexSpecificValue = NULL
+                                  ,offline_mode = FALSE) {
 
   suppressWarnings(dataToUse[,seasonNumber := NULL])
+  
+  if (offline_mode = TRUE) {
+    cat('Proceeding in Offline Mode, only using data contained within dataset used in function call \n')
+  }
   
   #check to make sure that they specified enough years for LTN calculation
   if (length(years.LTN) < 10) {
@@ -86,44 +93,46 @@ processClimateIndices <- function(dataToUse
   #We are going to store the pulled data in the aWhereEnv so that the user does
   #not lose it but we will not force them to update their data object.  However
   #we will give them the option of doing so
-  if (exists('climateIndex_LTNData',where = awhereEnv75247,inherits = FALSE) == TRUE) {
-    
-    temp <- awhereEnv75247$climateIndex_LTNData
-    
-    #DM NOTE: MAY WANT TO CHANGE THIS TO STORING MANY LOCATIONS AND THEN SUBSETTING SO IT WORKS WITH JC's LOOPING
-    
-    #check to make sure they are pulling data for the same location
-    lat.prev <- unique(temp[,latitude])
-    lon.prev <- unique(temp[,longitude])
-    
-    lat.now <- unique(dataToUse[,latitude])
-    lon.now <- unique(dataToUse[,longitude])
-    
-    #If data is for the same location we can add.  Its not a problem if its for a different date range
-    if (length(lat.prev) == 1 & length(lon.prev) == 1 & 
-        lat.prev == lat.now & lon.prev == lon.now) {
-      dataToUse <- rbind(dataToUse,temp,use.names = TRUE,fill = TRUE)
+  if (exists('awhereEnv75247') == TRUE) {
+    if (exists('climateIndex_LTNData',where = awhereEnv75247,inherits = FALSE) == TRUE) {
       
-      dataToUse <- unique(dataToUse, by = 'date')
+      temp <- awhereEnv75247$climateIndex_LTNData
+      
+      #DM NOTE: MAY WANT TO CHANGE THIS TO STORING MANY LOCATIONS AND THEN SUBSETTING SO IT WORKS WITH JC's LOOPING
+      
+      #check to make sure they are pulling data for the same location
+      lat.prev <- unique(temp[,latitude])
+      lon.prev <- unique(temp[,longitude])
+      
+      lat.now <- unique(dataToUse[,latitude])
+      lon.now <- unique(dataToUse[,longitude])
+      
+      #If data is for the same location we can add.  Its not a problem if its for a different date range
+      if (length(lat.prev) == 1 & length(lon.prev) == 1 & 
+          lat.prev == lat.now & lon.prev == lon.now) {
+        dataToUse <- rbind(dataToUse,temp,use.names = TRUE,fill = TRUE)
+        
+        dataToUse <- unique(dataToUse, by = 'date')
+      }
     }
-  }
-  
-  if (exists('generateaWhereDataset.LTN_years',where = awhereEnv75247,inherits = FALSE) == TRUE) {
     
-    year_start <- awhereEnv75247$generateaWhereDataset.LTN_years[1]
-    year_end <- awhereEnv75247$generateaWhereDataset.LTN_years[2]
-    
-    #In case the object in the aWhere env gets messed up
-    if (is.null(year_start) == TRUE) {
+    if (exists('generateaWhereDataset.LTN_years',where = awhereEnv75247,inherits = FALSE) == TRUE) {
+      
+      year_start <- awhereEnv75247$generateaWhereDataset.LTN_years[1]
+      year_end <- awhereEnv75247$generateaWhereDataset.LTN_years[2]
+      
+      #In case the object in the aWhere env gets messed up
+      if (is.null(year_start) == TRUE) {
+        year_start <- min(years.LTN)
+      }
+      
+      if (is.null(year_end) == TRUE) {
+        year_end <- max(years.LTN)
+      }
+    } else {
       year_start <- min(years.LTN)
-    }
-    
-    if (is.null(year_end) == TRUE) {
       year_end <- max(years.LTN)
     }
-  } else {
-    year_start <- min(years.LTN)
-    year_end <- max(years.LTN)
   }
   
   ############################################################################
@@ -131,9 +140,7 @@ processClimateIndices <- function(dataToUse
   #yearsPresent <- dataToUse[,unique(lubridate::year(date))]
   #yearsNeeded <- sort(unique(c(yearsPresent,years.LTN)))
   
-  
   yearsNeeded <- sort(unique(years.LTN,startYearOfSeasonToPlot))
-  
   
   #handles data that goes over Jan 1st
   if (paste0('2020-',season.monthDay_start) > paste0('2020-',season.monthDay_end)) {
@@ -154,13 +161,15 @@ processClimateIndices <- function(dataToUse
   
   allDaysNeeded <- allDaysNeeded[allDaysNeeded <= (Sys.Date() + 13)]
   
-  if (length(setdiff(allDaysNeeded,dataToUse[,date])) > 0) {
-    cat(paste0('This function requires the daily data over all years the index is to be calculated for. This function
-                can automatically request this data.'))
-    makeAPICalls <- readline("Do you wish to proceed with the current request? Type yes to begin API calls: ")
-    
-    if (tolower(makeAPICalls) != 'yes') {
-      stop('User Input indicated they did not want to proceed with making API Calls \n')
+  if (offline_mode == FALSE) {
+    if (length(setdiff(allDaysNeeded,dataToUse[,date])) > 0) {
+      cat(paste0('This function requires the daily data over all years the index is to be calculated for. This function
+                  can automatically request this data.'))
+      makeAPICalls <- readline("Do you wish to proceed with the current request? Type yes to begin API calls: ")
+      
+      if (tolower(makeAPICalls) != 'yes') {
+        stop('User Input indicated they did not want to proceed with making API Calls \n')
+      }
     }
   }
   
@@ -176,119 +185,131 @@ processClimateIndices <- function(dataToUse
   #Loop over the years we need data and get it in the minimum number of API
   #calls.  Only request the LTN data once
   
-  temp <- list()
-  for (x in 1:length(yearsNeeded)) {
-    
-    currentYear <- yearsNeeded[x]
-    startDate <- as.Date(paste0(currentYear,'-',season.monthDay_start))
-    endDate <- as.Date(paste0(currentYear + year.increment,'-',season.monthDay_end))
-    
-    if (endDate > (Sys.Date() + 13)) {
-      endDate <- Sys.Date() + 13
-    }
-    
-    daysNeeded <- seq.Date(startDate,endDate,by = 'days')
-    
-    #Figure out which days are not currently present in the dataset
-    daysNeeded.pull <- as.Date(setdiff(daysNeeded,dataToUse[,date]),origin = '1970-01-01')
-    
-    #determine if this pull contains needed LTN data
-    daysNeeded.pull.LTN <- intersect(allDaysNeeded.LTN,unique(substr(x = daysNeeded.pull,6,10)))
-    #These are the days we are still needed LTN Data for on the next iteration
-    allDaysNeeded.LTN <- setdiff(allDaysNeeded.LTN,daysNeeded.pull.LTN )
-    
-    if (length(daysNeeded.pull.LTN) > 0) {
-      requestLTNData <- TRUE
-    } else {
-      requestLTNData <- FALSE
-    }
-    
-    if (length(daysNeeded.pull) > 0) {
-      startDate.dataPull <- min(daysNeeded.pull)
-      endDate.dataPull <- max(daysNeeded.pull)
+  if (offline_mode == FALSE) {
+    temp <- list()
+    for (x in 1:length(yearsNeeded)) {
       
-      cat(paste0('    Requesting data between ',startDate.dataPull,' and ',endDate.dataPull,'\n'))
+      currentYear <- yearsNeeded[x]
+      startDate <- as.Date(paste0(currentYear,'-',season.monthDay_start))
+      endDate <- as.Date(paste0(currentYear + year.increment,'-',season.monthDay_end))
       
-      if (requestLTNData == TRUE) {
-        startYear.value <- year_start  #these should exist because the getaWhereDataset fxn has to be run before this
-        endYear.value <- year_end
-      } else {
-        startYear.value <- NULL
-        endYear.value <- NULL
+      if (endDate > (Sys.Date() + 13)) {
+        endDate <- Sys.Date() + 13
       }
       
-      dt <- 
-        generateaWhereDataset(lat = dataToUse[,unique(latitude)]
-                              ,lon = dataToUse[,unique(longitude)]
-                              ,day_start = startDate.dataPull
-                              ,day_end = endDate.dataPull
-                              ,year_start = startYear.value
-                              ,year_end = endYear.value
-                              ,verbose = FALSE
-                              ,appendPrevDataPull = FALSE)
+      daysNeeded <- seq.Date(startDate,endDate,by = 'days')
       
-    } else {
-      dt <-
-        data.frame(latitude = 0
-                   ,longitude = 0
-                   ,date = Sys.Date()
-                   ,day = '0'
-                   ,accumulatedGdd.amount = 0
-                   ,accumulatedGdd.average = 0
-                   ,accumulatedGdd.stdDev = 0
-                   ,accumulatedPet.amount = 0
-                   ,accumulatedPet.average = 0
-                   ,accumulatedPet.stdDev = 0
-                   ,accumulatedPpet.amount = 0
-                   ,accumulatedPpet.average = 0
-                   ,accumulatedPpet.stdDev = 0
-                   ,accumulatedPrecipitation.amount = 0
-                   ,accumulatedPrecipitation.average = 0
-                   ,accumulatedPrecipitation.stdDev = 0
-                   ,gdd.amount = 0
-                   ,gdd.average = 0
-                   ,gdd.stdDev = 0
-                   ,pet.amount = 0
-                   ,pet.average = 0
-                   ,pet.stdDev = 0
-                   ,ppet.amount = 0
-                   ,ppet.average = 0
-                   ,ppet.stdDev = 0
-                   ,precipitation.amount = 0
-                   ,precipitation.average = 0
-                   ,precipitation.stdDev = 0
-                   ,relativeHumidity.max.amount = 0
-                   ,relativeHumidity.max.average = 0
-                   ,relativeHumidity.max.stdDev = 0
-                   ,relativeHumidity.min.amount = 0
-                   ,relativeHumidity.min.average = 0
-                   ,relativeHumidity.min.stdDev = 0
-                   ,solar.amount = 0
-                   ,solar.average = 0
-                   ,solar.stdDev = 0
-                   ,temperatures.max.amount = 0
-                   ,temperatures.max.average = 0
-                   ,temperatures.max.stdDev = 0
-                   ,temperatures.min.amount = 0
-                   ,temperatures.min.average = 0
-                   ,temperatures.min.stdDev = 0
-                   ,wind.average.amount = 0
-                   ,wind.average.average = 0
-                   ,wind.average.stdDev = 0
-                   ,wind.dayMax.amount = 0
-                   ,wind.dayMax.average = 0
-                   ,wind.dayMax.stdDev = 0)
+      #Figure out which days are not currently present in the dataset
+      daysNeeded.pull <- as.Date(setdiff(daysNeeded,dataToUse[,date]),origin = '1970-01-01')
       
-      dt <- dt[0,]
+      #determine if this pull contains needed LTN data
+      daysNeeded.pull.LTN <- intersect(allDaysNeeded.LTN,unique(substr(x = daysNeeded.pull,6,10)))
+      #These are the days we are still needed LTN Data for on the next iteration
+      allDaysNeeded.LTN <- setdiff(allDaysNeeded.LTN,daysNeeded.pull.LTN )
+      
+      if (length(daysNeeded.pull.LTN) > 0) {
+        requestLTNData <- TRUE
+      } else {
+        requestLTNData <- FALSE
+      }
+      
+      if (length(daysNeeded.pull) > 0) {
+        startDate.dataPull <- min(daysNeeded.pull)
+        endDate.dataPull <- max(daysNeeded.pull)
+        
+        cat(paste0('    Requesting data between ',startDate.dataPull,' and ',endDate.dataPull,'\n'))
+        
+        if (requestLTNData == TRUE) {
+          startYear.value <- year_start  #these should exist because the getaWhereDataset fxn has to be run before this
+          endYear.value <- year_end
+        } else {
+          startYear.value <- NULL
+          endYear.value <- NULL
+        }
+        
+        dt <- 
+          generateaWhereDataset(lat = dataToUse[,unique(latitude)]
+                                ,lon = dataToUse[,unique(longitude)]
+                                ,day_start = startDate.dataPull
+                                ,day_end = endDate.dataPull
+                                ,year_start = startYear.value
+                                ,year_end = endYear.value
+                                ,verbose = FALSE
+                                ,appendPrevDataPull = FALSE)
+        
+      } else {
+        dt <-
+          data.frame(latitude = 0
+                     ,longitude = 0
+                     ,date = Sys.Date()
+                     ,day = '0'
+                     ,accumulatedGdd.amount = 0
+                     ,accumulatedGdd.average = 0
+                     ,accumulatedGdd.stdDev = 0
+                     ,accumulatedPet.amount = 0
+                     ,accumulatedPet.average = 0
+                     ,accumulatedPet.stdDev = 0
+                     ,accumulatedPpet.amount = 0
+                     ,accumulatedPpet.average = 0
+                     ,accumulatedPpet.stdDev = 0
+                     ,accumulatedPrecipitation.amount = 0
+                     ,accumulatedPrecipitation.average = 0
+                     ,accumulatedPrecipitation.stdDev = 0
+                     ,gdd.amount = 0
+                     ,gdd.average = 0
+                     ,gdd.stdDev = 0
+                     ,pet.amount = 0
+                     ,pet.average = 0
+                     ,pet.stdDev = 0
+                     ,ppet.amount = 0
+                     ,ppet.average = 0
+                     ,ppet.stdDev = 0
+                     ,precipitation.amount = 0
+                     ,precipitation.average = 0
+                     ,precipitation.stdDev = 0
+                     ,relativeHumidity.max.amount = 0
+                     ,relativeHumidity.max.average = 0
+                     ,relativeHumidity.max.stdDev = 0
+                     ,relativeHumidity.min.amount = 0
+                     ,relativeHumidity.min.average = 0
+                     ,relativeHumidity.min.stdDev = 0
+                     ,solar.amount = 0
+                     ,solar.average = 0
+                     ,solar.stdDev = 0
+                     ,temperatures.max.amount = 0
+                     ,temperatures.max.average = 0
+                     ,temperatures.max.stdDev = 0
+                     ,temperatures.min.amount = 0
+                     ,temperatures.min.average = 0
+                     ,temperatures.min.stdDev = 0
+                     ,wind.average.amount = 0
+                     ,wind.average.average = 0
+                     ,wind.average.stdDev = 0
+                     ,wind.dayMax.amount = 0
+                     ,wind.dayMax.average = 0
+                     ,wind.dayMax.stdDev = 0)
+        
+        dt <- dt[0,]
+      }
+      
+      temp[[x]] <- rbind(dataToUse[date %in% daysNeeded,colnames(dt),with = FALSE],dt,use.names = TRUE)
+      setkey(temp[[x]],date)
+      
     }
     
-    temp[[x]] <- rbind(dataToUse[date %in% daysNeeded,colnames(dt),with = FALSE],dt,use.names = TRUE)
-    setkey(temp[[x]],date)
+    temp <- rbindlist(temp,use.names = TRUE,fill = TRUE)
+  } else {
     
-    #temp[[x]][,seasonNumber := x]
+    daysMissing <- setdiff(allDaysNeeded,dataToUse[,date])
+    
+    if (length(daysMissing) > 0) {
+      warning(paste0('Missing Data for the following dates: ',paste(as.Date(daysMissing,origin = '1970-01-01'),collapse = ', ')))
+    }
+    
+   
+    
+    temp <- dataToUse[date %in% allDaysNeeded,colnames(dt,with = FALSE)]
   }
-  
-  temp <- rbindlist(temp,use.names = TRUE,fill = TRUE)
   
   #####################################################################################
   #We now need to assign the LTN values to all appropriate rows instead of just the one the data was pulled with
@@ -332,23 +353,25 @@ processClimateIndices <- function(dataToUse
   
   ####################################################################################################
   #We need to update something so that the user doesn't lose all the data that was pulled in this function
-  if (exists('climateIndex_LTNData',where = awhereEnv75247,inherits = FALSE) == TRUE) {
-    if (bindingIsLocked('climateIndex_LTNData',awhereEnv75247) == TRUE) {
-      unlockBinding('climateIndex_LTNData',awhereEnv75247)
+  if (exists('awhereEnv75247') == TRUE) {
+    if (exists('climateIndex_LTNData',where = awhereEnv75247,inherits = FALSE) == TRUE) {
+      if (bindingIsLocked('climateIndex_LTNData',awhereEnv75247) == TRUE) {
+        unlockBinding('climateIndex_LTNData',awhereEnv75247)
+      }
     }
-  }
-  
-  if (exists('generateaWhereDataset.LTN_years',where = awhereEnv75247,inherits = FALSE) == TRUE) {
-    if (bindingIsLocked('generateaWhereDataset.LTN_years',awhereEnv75247) == TRUE) {
-      unlockBinding('generateaWhereDataset.LTN_years',awhereEnv75247)
+    
+    if (exists('generateaWhereDataset.LTN_years',where = awhereEnv75247,inherits = FALSE) == TRUE) {
+      if (bindingIsLocked('generateaWhereDataset.LTN_years',awhereEnv75247) == TRUE) {
+        unlockBinding('generateaWhereDataset.LTN_years',awhereEnv75247)
+      }
     }
+    
+    awhereEnv75247$climateIndex_LTNData <- dataToUse.all[,cols.origOrder,with = FALSE]
+    awhereEnv75247$generateaWhereDataset.LTN_years <- c(year_start,year_end)  
+    
+    lockBinding('climateIndex_LTNData',awhereEnv75247)
+    lockBinding('generateaWhereDataset.LTN_years',awhereEnv75247)
   }
-  
-  awhereEnv75247$climateIndex_LTNData <- dataToUse.all[,cols.origOrder,with = FALSE]
-  awhereEnv75247$generateaWhereDataset.LTN_years <- c(year_start,year_end)  
-  
-  lockBinding('climateIndex_LTNData',awhereEnv75247)
-  lockBinding('generateaWhereDataset.LTN_years',awhereEnv75247)
   
   ############################################################################
   #Subset the data if the user specifies

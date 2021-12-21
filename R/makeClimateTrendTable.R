@@ -43,6 +43,8 @@
 #'   parameter with .csv file type (optional)
 #' @param indexSpecificValue For the Climate Indices this tool can plot the user
 #'   can override the default value of the index using this parameter (optional)
+#' @param offline_mode Set to TRUE to work in offline mode and not attempt to fetch data
+#'   from the aWhere API (optional)   
 #'
 #' @import dplyr
 #' @import data.table
@@ -73,7 +75,8 @@ makeClimateTrendTable <- function(data
                                   ,e_precip = FALSE 
                                   ,e_threshold = 35
                                   ,writeOutTableData = FALSE
-                                  ,indexSpecificValue = NULL) {
+                                  ,indexSpecificValue = NULL
+                                  ,offline_mode = FALSE) {
   
   if (webshot::is_phantomjs_installed() == FALSE) {
     cat('PhantomJS is not installed.  This must be installed before the tables can be output\n')
@@ -95,7 +98,8 @@ makeClimateTrendTable <- function(data
                           ,title = title
                           ,e_precip = e_precip 
                           ,e_threshold = e_threshold
-                          ,indexSpecificValue = indexSpecificValue)
+                          ,indexSpecificValue = indexSpecificValue
+                          ,offline_mode = offline_mode)
   
   dataToUse <- out.list[[1]]
   variable.all <- out.list[[2]]
